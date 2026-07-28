@@ -6,20 +6,29 @@ interface Props {
 }
 
 export function QRScanner({ onScan }: Props) {
-  const scannerRef = useRef<Html5Qrcode | null>(null)
+  const detenidoRef = useRef(false)
   const contenedorId = 'qr-reader'
 
   useEffect(() => {
+    detenidoRef.current = false
     const scanner = new Html5Qrcode(contenedorId)
-    scannerRef.current = scanner
+
+    const detenerSeguro = async () => {
+      if (detenidoRef.current) return
+      detenidoRef.current = true
+      try {
+        await scanner.stop()
+      } catch {
+        // Ya estaba detenida o nunca llegó a arrancar del todo — no pasa nada.
+      }
+    }
 
     scanner
       .start(
         { facingMode: 'environment' },
         { fps: 10, qrbox: 220 },
         (decodedText) => {
-          onScan(decodedText)
-          scanner.stop().catch(() => {})
+          detenerSeguro().finally(() => onScan(decodedText))
         },
         () => {}
       )
@@ -28,7 +37,7 @@ export function QRScanner({ onScan }: Props) {
       })
 
     return () => {
-      scanner.stop().catch(() => {})
+      detenerSeguro()
     }
   }, [onScan])
 
