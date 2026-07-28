@@ -31,28 +31,42 @@ export function Login() {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="max-w-sm mx-auto mt-20 space-y-4 px-4">
-      <h1 className="text-xl font-semibold">Iniciar sesión</h1>
-      <input
-        type="email"
-        placeholder="Correo corporativo"
-        value={email}
-        onChange={(e) => setEmail(e.target.value)}
-        className="w-full border rounded px-3 py-2"
-        required
-      />
-      <input
-        type="password"
-        placeholder="Contraseña"
-        value={password}
-        onChange={(e) => setPassword(e.target.value)}
-        className="w-full border rounded px-3 py-2"
-        required
-      />
-      {error && <p className="text-red-600 text-sm">{error}</p>}
-      <button type="submit" className="w-full bg-slate-900 text-white rounded px-3 py-2">
-        Entrar
-      </button>
-    </form>
+    <div className="min-h-screen flex items-center justify-center px-4">
+      <div className="w-full max-w-sm">
+        <div className="flex flex-col items-center mb-8">
+          <div className="w-14 h-14 rounded-2xl bg-primary flex items-center justify-center mb-4">
+            <span className="font-display font-extrabold text-white text-2xl">V</span>
+          </div>
+          <h1 className="font-display font-bold text-xl text-ink">Vite Servicios</h1>
+          <p className="text-sm text-muted">Fichaje y evidencia</p>
+        </div>
+
+        <form onSubmit={handleSubmit} className="bg-white rounded-2xl shadow-sm border border-black/5 p-6 space-y-4">
+          <input
+            type="email"
+            placeholder="Correo corporativo"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            className="w-full border border-black/10 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30"
+            required
+          />
+          <input
+            type="password"
+            placeholder="Contraseña"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            className="w-full border border-black/10 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30"
+            required
+          />
+          {error && <p className="text-danger text-sm">{error}</p>}
+          <button
+            type="submit"
+            className="w-full bg-primary hover:bg-primary-dark transition-colors text-white font-medium rounded-lg px-3 py-2.5"
+          >
+            Entrar
+          </button>
+        </form>
+      </div>
+    </div>
   )
 }

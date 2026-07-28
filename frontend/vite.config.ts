@@ -10,12 +10,16 @@ export default defineConfig({
     VitePWA({
       registerType: 'autoUpdate',
       manifest: {
-        name: 'CleanOps',
-        short_name: 'CleanOps',
+        name: 'Vite Servicios - Fichaje',
+        short_name: 'Vite Fichaje',
         description: 'Fichaje y evidencia para equipos de limpieza',
-        theme_color: '#0f172a',
-        background_color: '#0f172a',
+        theme_color: '#1E4B5F',
+        background_color: '#F7F6F4',
         display: 'standalone',
+        icons: [
+          { src: 'icons/icon-192.png', sizes: '192x192', type: 'image/png' },
+          { src: 'icons/icon-512.png', sizes: '512x512', type: 'image/png' },
+        ],
       },
     }),
   ],
