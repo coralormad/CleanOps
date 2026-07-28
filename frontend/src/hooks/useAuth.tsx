@@ -1,4 +1,11 @@
-import { useEffect, useState, useCallback } from 'react'
+import {
+  createContext,
+  useContext,
+  useEffect,
+  useState,
+  useCallback,
+  type ReactNode,
+} from 'react'
 import { supabase } from '../lib/supabaseClient'
 
 export type Rol = 'empleada' | 'supervisor' | 'gerencia'
@@ -9,7 +16,16 @@ interface PerfilAuth {
   rol: Rol
 }
 
-export function useAuth() {
+interface AuthContextValue {
+  perfil: PerfilAuth | null
+  cargando: boolean
+  iniciarSesion: (email: string, password: string) => Promise<Error | null>
+  cerrarSesion: () => Promise<void>
+}
+
+const AuthContext = createContext<AuthContextValue | undefined>(undefined)
+
+export function AuthProvider({ children }: { children: ReactNode }) {
   const [perfil, setPerfil] = useState<PerfilAuth | null>(null)
   const [cargando, setCargando] = useState(true)
 
@@ -41,19 +57,17 @@ export function useAuth() {
       }
     })
 
-const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
-  if (session?.user) {
-    setCargando(true)
-    cargarPerfil(session.user.id).finally(() => setCargando(false))
-  } else {
-    // Si no hay conexión, esto probablemente sea un fallo temporal
-    // de renovación de token, no un cierre de sesión real — no vaciamos el perfil.
-    if (navigator.onLine) {
-      setPerfil(null)
-    }
-    setCargando(false)
-  }
-})
+    const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (session?.user) {
+        setCargando(true)
+        cargarPerfil(session.user.id).finally(() => setCargando(false))
+      } else {
+        if (navigator.onLine) {
+          setPerfil(null)
+        }
+        setCargando(false)
+      }
+    })
 
     return () => listener.subscription.unsubscribe()
   }, [cargarPerfil])
@@ -67,5 +81,17 @@ const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => 
     await supabase.auth.signOut()
   }
 
-  return { perfil, cargando, iniciarSesion, cerrarSesion }
+  return (
+    <AuthContext.Provider value={{ perfil, cargando, iniciarSesion, cerrarSesion }}>
+      {children}
+    </AuthContext.Provider>
+  )
+}
+
+export function useAuth() {
+  const context = useContext(AuthContext)
+  if (!context) {
+    throw new Error('useAuth debe usarse dentro de un AuthProvider')
+  }
+  return context
 }
