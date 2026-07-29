@@ -1,8 +1,8 @@
 import { Outlet, useLocation } from 'react-router-dom'
-import { Bell } from 'lucide-react'
 import { useAuth } from '../hooks/useAuth'
 import { Sidebar } from './Sidebar'
 import { ADMIN_NAV_ITEMS } from '../config/adminNav'
+import { NotificationBell } from '../components/NotificationBell'
 
 function useTituloActual(): string {
   const { pathname } = useLocation()
@@ -28,9 +28,7 @@ export function AdminLayout() {
         <header className="h-16 border-b border-black/5 bg-white flex items-center justify-between px-6 lg:px-8">
           <h1 className="font-display font-bold text-ink text-lg pl-12 lg:pl-0">{titulo}</h1>
           <div className="flex items-center gap-4">
-            <button className="text-muted hover:text-ink transition-colors" aria-label="Notificaciones">
-              <Bell size={20} />
-            </button>
+            <NotificationBell empleadaId={perfil?.id} rol={perfil?.rol} />
             <div className="w-9 h-9 rounded-full bg-primary text-white text-xs font-semibold flex items-center justify-center">
               {iniciales}
             </div>

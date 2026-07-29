@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
 import { supabase } from '../lib/supabaseClient'
+import { notificarEmpleada } from '../lib/notificaciones'
 
 export interface TurnoConDetalle {
   id: string
@@ -20,6 +21,8 @@ interface NuevoTurno {
   horaFin: string
 }
 
+const DIAS = ['', 'lunes', 'martes', 'miercoles', 'jueves', 'viernes', 'sabado', 'domingo']
+
 export function useTurnos() {
   const [turnos, setTurnos] = useState<TurnoConDetalle[]>([])
   const [cargando, setCargando] = useState(true)
@@ -29,11 +32,7 @@ export function useTurnos() {
     setCargando(true)
     const { data, error } = await supabase
       .from('turnos')
-      .select(
-        `id, empleada_id, ubicacion_id, dia_semana, hora_inicio, hora_fin,
-         empleadas ( nombre_completo ),
-         ubicaciones_portales ( nombre )`
-      )
+      .select('id, empleada_id, ubicacion_id, dia_semana, hora_inicio, hora_fin, empleadas ( nombre_completo ), ubicaciones_portales ( nombre )')
       .order('dia_semana', { ascending: true })
       .order('hora_inicio', { ascending: true })
 
@@ -47,6 +46,13 @@ export function useTurnos() {
 
   const crear = async (datos: NuevoTurno): Promise<{ ok: boolean; mensaje: string }> => {
     setGuardando(true)
+
+    const { data: ubicacion } = await supabase
+      .from('ubicaciones_portales')
+      .select('nombre')
+      .eq('id', datos.ubicacionId)
+      .single()
+
     const { error } = await supabase.from('turnos').insert({
       empleada_id: datos.empleadaId,
       ubicacion_id: datos.ubicacionId,
@@ -57,12 +63,26 @@ export function useTurnos() {
     setGuardando(false)
 
     if (error) return { ok: false, mensaje: 'Error al crear el turno: ' + error.message }
+
+    const nombreUbicacion = ubicacion?.nombre ?? 'un edificio'
+    const mensajeAviso = 'Nuevo turno asignado: ' + DIAS[datos.diaSemana] + ' ' + datos.horaInicio.slice(0, 5) + '-' + datos.horaFin.slice(0, 5) + ' en ' + nombreUbicacion
+    notificarEmpleada(datos.empleadaId, mensajeAviso)
+
     await cargar()
     return { ok: true, mensaje: 'Turno creado correctamente' }
   }
 
   const eliminar = async (id: string) => {
+    const turno = turnos.find((t) => t.id === id)
+
     await supabase.from('turnos').delete().eq('id', id)
+
+    if (turno) {
+      const nombreUbicacion = turno.ubicaciones_portales?.nombre ?? 'un edificio'
+      const mensajeAviso = 'Se ha eliminado tu turno de ' + DIAS[turno.dia_semana] + ' en ' + nombreUbicacion
+      notificarEmpleada(turno.empleada_id, mensajeAviso)
+    }
+
     await cargar()
   }
 

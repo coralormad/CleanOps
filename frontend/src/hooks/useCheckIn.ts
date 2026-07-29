@@ -1,24 +1,17 @@
-import { useState, useCallback } from 'react'
+import { useState } from 'react'
 import { supabase } from '../lib/supabaseClient'
 import { haversineDistanceMeters, getCurrentPositionSafe } from '../lib/geoValidation'
-import {
-  encolarFichaje,
-  obtenerFichajesPendientes,
-  eliminarFichajePendiente,
-} from '../lib/offlineQueue'
+import { encolarFichaje, obtenerFichajesPendientes, eliminarFichajePendiente } from '../lib/offlineQueue'
+import { notificarStaff } from '../lib/notificaciones'
 
 interface ResultadoFichaje {
   ok: boolean
   mensaje: string
 }
 
-async function subirFotoStorage(
-  empleadaId: string,
-  blob: Blob,
-  nombreOriginal: string
-): Promise<string | null> {
+async function subirFotoStorage(empleadaId: string, blob: Blob, nombreOriginal: string): Promise<string | null> {
   const extension = nombreOriginal.split('.').pop() || 'jpg'
-  const ruta = `${empleadaId}/${Date.now()}.${extension}`
+  const ruta = empleadaId + '/' + Date.now() + '.' + extension
   const { error } = await supabase.storage.from('fichajes').upload(ruta, blob)
   if (error) {
     console.error('Error subiendo foto', error)
@@ -30,6 +23,7 @@ async function subirFotoStorage(
 
 async function insertarFichajeRemoto(params: {
   empleadaId: string
+  nombreEmpleada?: string
   codigoQr: string
   tipo: 'entrada' | 'salida'
   fechaHoraDispositivo: string
@@ -43,7 +37,7 @@ async function insertarFichajeRemoto(params: {
     .single()
 
   if (errorUbicacion || !ubicacion) {
-    return { ok: false, mensaje: 'Código QR no reconocido' }
+    return { ok: false, mensaje: 'Codigo QR no reconocido' }
   }
 
   const posicion = await getCurrentPositionSafe()
@@ -90,30 +84,30 @@ async function insertarFichajeRemoto(params: {
     return { ok: false, mensaje: 'Error al guardar el fichaje: ' + errorInsert.message }
   }
 
+  if (dentroDelRadio === false) {
+    const nombre = params.nombreEmpleada ?? 'Una empleada'
+    notificarStaff(nombre + ' ficho fuera del radio esperado en ' + ubicacion.nombre + ' (' + Math.round(distanciaMetros ?? 0) + 'm)', '/admin/fichajes')
+  }
+
   return {
     ok: true,
-    mensaje:
-      dentroDelRadio === false
-        ? `Fichaje de ${params.tipo} registrado en ${ubicacion.nombre} (fuera del radio esperado, quedará marcado para revisión)`
-        : `Fichaje de ${params.tipo} registrado en ${ubicacion.nombre}`,
+    mensaje: dentroDelRadio === false
+      ? 'Fichaje de ' + params.tipo + ' registrado en ' + ubicacion.nombre + ' (fuera del radio esperado, quedara marcado para revision)'
+      : 'Fichaje de ' + params.tipo + ' registrado en ' + ubicacion.nombre,
   }
 }
 
-export function useCheckIn(empleadaId: string | undefined) {
+export function useCheckIn(empleadaId: string | undefined, nombreEmpleada?: string) {
   const [procesando, setProcesando] = useState(false)
   const [pendientes, setPendientes] = useState(0)
 
-  const actualizarContadorPendientes = useCallback(async () => {
+  const actualizarContadorPendientes = async () => {
     const items = await obtenerFichajesPendientes()
     setPendientes(items.length)
-  }, [])
+  }
 
-  const registrarFichaje = async (
-    codigoQr: string,
-    tipo: 'entrada' | 'salida',
-    foto?: File | null
-  ): Promise<ResultadoFichaje> => {
-    if (!empleadaId) return { ok: false, mensaje: 'No hay sesión activa' }
+  const registrarFichaje = async (codigoQr: string, tipo: 'entrada' | 'salida', foto?: File | null): Promise<ResultadoFichaje> => {
+    if (!empleadaId) return { ok: false, mensaje: 'No hay sesion activa' }
 
     setProcesando(true)
     const fechaHoraDispositivo = new Date().toISOString()
@@ -130,15 +124,13 @@ export function useCheckIn(empleadaId: string | undefined) {
           fechaHoraDispositivo,
         })
         await actualizarContadorPendientes()
-        return {
-          ok: true,
-          mensaje: 'Sin conexión: fichaje guardado en el dispositivo, se enviará automáticamente al recuperar señal',
-        }
+        return { ok: true, mensaje: 'Sin conexion: fichaje guardado en el dispositivo, se enviara automaticamente al recuperar senal' }
       }
 
       try {
         return await insertarFichajeRemoto({
           empleadaId,
+          nombreEmpleada,
           codigoQr,
           tipo,
           fechaHoraDispositivo,
@@ -156,21 +148,19 @@ export function useCheckIn(empleadaId: string | undefined) {
           fechaHoraDispositivo,
         })
         await actualizarContadorPendientes()
-        return {
-          ok: true,
-          mensaje: 'No se pudo conectar: fichaje guardado en el dispositivo, se reintentará automáticamente',
-        }
+        return { ok: true, mensaje: 'No se pudo conectar: fichaje guardado en el dispositivo, se reintentara automaticamente' }
       }
     } finally {
       setProcesando(false)
     }
   }
 
-  const sincronizarPendientes = useCallback(async () => {
+  const sincronizarPendientes = async () => {
     const items = await obtenerFichajesPendientes()
     for (const item of items) {
       const resultado = await insertarFichajeRemoto({
         empleadaId: item.empleadaId,
+        nombreEmpleada,
         codigoQr: item.codigoQr,
         tipo: item.tipo,
         fechaHoraDispositivo: item.fechaHoraDispositivo,
@@ -182,7 +172,7 @@ export function useCheckIn(empleadaId: string | undefined) {
       }
     }
     await actualizarContadorPendientes()
-  }, [actualizarContadorPendientes])
+  }
 
   return { registrarFichaje, procesando, pendientes, actualizarContadorPendientes, sincronizarPendientes }
 }
