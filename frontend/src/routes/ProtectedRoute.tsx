@@ -14,7 +14,8 @@ export function ProtectedRoute({ children, rolesPermitidos }: Props) {
   if (!perfil) return <Navigate to="/login" replace />
 
   if (rolesPermitidos && !rolesPermitidos.includes(perfil.rol)) {
-    return <Navigate to="/" replace />
+    const destino = perfil.rol === 'empleada' ? '/' : '/admin/dashboard'
+    return <Navigate to={destino} replace />
   }
 
   return children
