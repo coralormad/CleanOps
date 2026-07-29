@@ -32,11 +32,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const cargarPerfil = useCallback(async (userId: string) => {
     const { data, error } = await supabase
       .from('empleadas')
-      .select('id, nombre_completo, rol')
+      .select('id, nombre_completo, rol, activo')
       .eq('id', userId)
       .single()
 
     if (error || !data) {
+      setPerfil(null)
+      return
+    }
+
+    if (!data.activo) {
+      // Cuenta desactivada: la echamos de verdad, no solo la ocultamos.
+      await supabase.auth.signOut()
       setPerfil(null)
       return
     }
