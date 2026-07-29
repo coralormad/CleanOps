@@ -1,9 +1,31 @@
 import { useState, useEffect } from 'react'
 import { useAuth } from '../hooks/useAuth'
 import { useCheckIn } from '../hooks/useCheckIn'
+import { useMisTurnos } from '../hooks/useMisTurnos'
 import { QRScanner } from '../components/QRScanner'
 
 type Tipo = 'entrada' | 'salida'
+
+const DIAS_SEMANA = ['', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo']
+
+function MiHorario({ empleadaId }: { empleadaId: string | undefined }) {
+  const { turnos, cargando } = useMisTurnos(empleadaId)
+
+  if (cargando) return null
+  if (turnos.length === 0) return null
+
+  return (
+    <div className="bg-white border border-black/5 rounded-2xl shadow-sm p-4 text-left space-y-2">
+      <h3 className="font-display font-bold text-ink text-sm">Mi horario</h3>
+      {turnos.map((t) => (
+        <p key={t.id} className="text-xs text-muted">
+          <span className="font-medium text-ink">{DIAS_SEMANA[t.dia_semana]}</span>{' '}
+          {t.hora_inicio.slice(0, 5)}–{t.hora_fin.slice(0, 5)} · {t.ubicaciones_portales?.nombre ?? 'Edificio'}
+        </p>
+      ))}
+    </div>
+  )
+}
 
 export function EmployeeHome() {
   const { perfil, cerrarSesion } = useAuth()
@@ -14,7 +36,6 @@ export function EmployeeHome() {
   const [escaneando, setEscaneando] = useState(false)
   const [codigoManual, setCodigoManual] = useState('')
   const [foto, setFoto] = useState<File | null>(null)
-  const [sincronizando, setSincronizando] = useState(false)
 
   useEffect(() => {
     actualizarContadorPendientes()
@@ -39,12 +60,6 @@ export function EmployeeHome() {
     setFoto(null)
   }
 
-  const handleSincronizarManual = async () => {
-    setSincronizando(true)
-    await sincronizarPendientes()
-    setSincronizando(false)
-  }
-
   return (
     <div className="min-h-screen px-4 py-8">
       <div className="max-w-sm mx-auto space-y-4">
@@ -56,18 +71,13 @@ export function EmployeeHome() {
           <p className="text-sm text-muted">Rol: {perfil?.rol}</p>
         </div>
 
+        <MiHorario empleadaId={perfil?.id} />
+
         {pendientes > 0 && (
           <div className="bg-warning-bg text-warning rounded-xl px-4 py-3 space-y-2">
             <p className="text-xs font-medium">
               {pendientes} fichaje{pendientes > 1 ? 's' : ''} pendiente{pendientes > 1 ? 's' : ''} de sincronizar
             </p>
-            <button
-              onClick={handleSincronizarManual}
-              disabled={sincronizando}
-              className="text-xs bg-warning text-white rounded-lg px-3 py-1.5 font-medium"
-            >
-              {sincronizando ? 'Sincronizando...' : 'Sincronizar ahora'}
-            </button>
           </div>
         )}
 
@@ -123,7 +133,7 @@ export function EmployeeHome() {
               value={codigoManual}
               onChange={(e) => setCodigoManual(e.target.value)}
               placeholder="Código del edificio"
-              className="w-full border border-black/10 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30"
+              className="w-full border border-black/10 rounded-lg px-3 py-2 text-sm"
             />
             <button
               onClick={handleManual}
