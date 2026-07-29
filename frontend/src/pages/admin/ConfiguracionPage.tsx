@@ -210,20 +210,39 @@ function TabTurnos() {
 
       <div>
         <h3 className="font-display font-bold text-ink text-sm mb-2">Turnos asignados</h3>
-        <div className="bg-white border border-black/5 rounded-2xl shadow-sm divide-y divide-black/5">
+        <div className="bg-white border border-black/5 rounded-2xl shadow-sm overflow-hidden">
           {cargando && <p className="text-sm text-muted p-5">Cargando turnos...</p>}
 
-          {!cargando && turnos.map((t) => (
-            <div key={t.id} className="flex items-center justify-between px-5 py-3.5 gap-3">
-              <div className="min-w-0">
-                <p className="text-sm font-medium text-ink truncate">{t.empleadas?.nombre_completo ?? 'Empleada desconocida'}</p>
-                <p className="text-xs text-muted truncate">{DIAS_SEMANA[t.dia_semana]} - {t.hora_inicio.slice(0, 5)}-{t.hora_fin.slice(0, 5)} - {t.ubicaciones_portales?.nombre ?? 'Edificio desconocido'}</p>
-              </div>
-              <button onClick={() => eliminar(t.id)} className="shrink-0 text-danger hover:bg-danger-bg transition-colors rounded-lg p-2" aria-label="Eliminar turno">
-                <Trash2 size={16} />
-              </button>
+          {!cargando && turnos.length > 0 && (
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b border-black/5 bg-black/[0.02]">
+                    <th className="text-left font-medium text-muted px-4 py-3">Empleada</th>
+                    <th className="text-left font-medium text-muted px-4 py-3">Dia</th>
+                    <th className="text-left font-medium text-muted px-4 py-3">Horario</th>
+                    <th className="text-left font-medium text-muted px-4 py-3">Edificio</th>
+                    <th className="text-left font-medium text-muted px-4 py-3"></th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-black/5">
+                  {turnos.map((t) => (
+                    <tr key={t.id}>
+                      <td className="px-4 py-3 font-medium text-ink whitespace-nowrap">{t.empleadas?.nombre_completo ?? 'Empleada desconocida'}</td>
+                      <td className="px-4 py-3 text-ink whitespace-nowrap">{DIAS_SEMANA[t.dia_semana]}</td>
+                      <td className="px-4 py-3 text-ink whitespace-nowrap">{t.hora_inicio.slice(0, 5)} - {t.hora_fin.slice(0, 5)}</td>
+                      <td className="px-4 py-3 text-ink">{t.ubicaciones_portales?.nombre ?? 'Edificio desconocido'}</td>
+                      <td className="px-4 py-3">
+                        <button onClick={() => eliminar(t.id)} className="text-danger hover:bg-danger-bg transition-colors rounded-lg p-1.5" aria-label="Eliminar turno">
+                          <Trash2 size={15} />
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             </div>
-          ))}
+          )}
 
           {!cargando && turnos.length === 0 && <p className="text-sm text-muted p-5">No hay turnos asignados todavia.</p>}
         </div>

@@ -1,7 +1,6 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { AuthProvider } from './hooks/useAuth'
 import { Login } from './pages/Login'
-import { EmployeeHome } from './pages/EmployeeHome'
 import { ProtectedRoute } from './routes/ProtectedRoute'
 import { AdminLayout } from './layout/AdminLayout'
 import { DashboardPage } from './pages/admin/DashboardPage'
@@ -10,6 +9,11 @@ import { FichajesPage } from './pages/admin/FichajesPage'
 import { SolicitudesPage } from './pages/admin/SolicitudesPage'
 import { InformesPage } from './pages/admin/InformesPage'
 import { ConfiguracionPage } from './pages/admin/ConfiguracionPage'
+import { EmployeeLayout } from './layout/EmployeeLayout'
+import { FicharPage } from './pages/employee/FicharPage'
+import { HorarioPage } from './pages/employee/HorarioPage'
+import { HistorialPage } from './pages/employee/HistorialPage'
+import { JustificantesPage } from './pages/employee/JustificantesPage'
 
 export default function App() {
   return (
@@ -22,10 +26,16 @@ export default function App() {
             path="/"
             element={
               <ProtectedRoute rolesPermitidos={['empleada']}>
-                <EmployeeHome />
+                <EmployeeLayout />
               </ProtectedRoute>
             }
-          />
+          >
+            <Route index element={<Navigate to="/fichar" replace />} />
+            <Route path="fichar" element={<FicharPage />} />
+            <Route path="horario" element={<HorarioPage />} />
+            <Route path="historial" element={<HistorialPage />} />
+            <Route path="justificantes" element={<JustificantesPage />} />
+          </Route>
 
           <Route
             path="/admin"
