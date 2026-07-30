@@ -4,6 +4,8 @@ import { useUbicaciones, type Ubicacion } from '../../hooks/useUbicaciones'
 import { useTurnos } from '../../hooks/useTurnos'
 import { useEmpleadas } from '../../hooks/useEmpleadas'
 import { DireccionBuscador } from '../../components/DireccionBuscador'
+import { Skeleton } from '../../components/Skeleton'
+import { Alert } from '../../components/Alert'
 
 type Tab = 'ubicaciones' | 'turnos'
 
@@ -34,13 +36,7 @@ function FormNuevaUbicacion({ crear, guardando, onCreada }: FormUbicacionProps) 
       return
     }
 
-    const resultado = await crear({
-      nombre: nombre.trim(),
-      direccion,
-      latitud,
-      longitud,
-      radio_geofence_metros: rad,
-    })
+    const resultado = await crear({ nombre: nombre.trim(), direccion, latitud, longitud, radio_geofence_metros: rad })
 
     if (!resultado.ok) {
       setError(resultado.mensaje)
@@ -59,16 +55,16 @@ function FormNuevaUbicacion({ crear, guardando, onCreada }: FormUbicacionProps) 
     <form onSubmit={handleSubmit} className="bg-white border border-black/5 rounded-2xl shadow-sm p-5 space-y-3">
       <h3 className="font-display font-bold text-ink text-sm">Añadir nueva ubicacion</h3>
 
-      <input type="text" placeholder="Nombre del edificio (interno, para identificarlo)" value={nombre} onChange={(e) => setNombre(e.target.value)} className="w-full border border-black/10 rounded-lg px-3 py-2 text-sm" required />
+      <input type="text" placeholder="Nombre del edificio (interno, para identificarlo)" value={nombre} onChange={(e) => setNombre(e.target.value)} className="w-full border border-black/10 rounded-lg px-3 py-2 text-sm transition-shadow focus:outline-none focus:ring-2 focus:ring-primary/30" required />
 
       <DireccionBuscador onSeleccionar={(dir, lat, lon) => { setDireccion(dir); setLatitud(lat || null); setLongitud(lon || null) }} />
 
       <div>
         <label className="text-xs text-muted block mb-1">Radio de tolerancia GPS (metros)</label>
-        <input type="number" value={radio} onChange={(e) => setRadio(e.target.value)} className="w-32 border border-black/10 rounded-lg px-3 py-2 text-sm" />
+        <input type="number" value={radio} onChange={(e) => setRadio(e.target.value)} className="w-32 border border-black/10 rounded-lg px-3 py-2 text-sm transition-shadow focus:outline-none focus:ring-2 focus:ring-primary/30" />
       </div>
 
-      {error && <p className="text-danger text-sm">{error}</p>}
+      {error && <Alert type="error">{error}</Alert>}
 
       <button type="submit" disabled={guardando} className="bg-primary hover:bg-primary-dark transition-colors text-white font-medium rounded-lg px-4 py-2 text-sm">
         {guardando ? 'Creando...' : 'Crear ubicacion'}
@@ -79,7 +75,7 @@ function FormNuevaUbicacion({ crear, guardando, onCreada }: FormUbicacionProps) 
   )
 }
 
-function FilaUbicacion({ ubicacion }: { ubicacion: Ubicacion }) {
+function FilaUbicacion({ ubicacion, indice }: { ubicacion: Ubicacion; indice: number }) {
   const [copiado, setCopiado] = useState(false)
 
   const copiar = async () => {
@@ -89,12 +85,12 @@ function FilaUbicacion({ ubicacion }: { ubicacion: Ubicacion }) {
   }
 
   return (
-    <div className="flex items-center justify-between px-5 py-3.5 gap-3">
+    <div className="flex items-center justify-between px-5 py-3.5 gap-3 transition-colors hover:bg-black/[0.02] animate-fade-in-up" style={{ animationDelay: `${indice * 30}ms` }}>
       <div className="min-w-0">
         <p className="text-sm font-medium text-ink truncate">{ubicacion.nombre}</p>
         <p className="text-xs text-muted truncate">{ubicacion.direccion || 'Sin direccion'} - radio {ubicacion.radio_geofence_metros}m</p>
       </div>
-      <button onClick={copiar} className="shrink-0 flex items-center gap-1.5 text-xs bg-black/5 hover:bg-black/10 transition-colors rounded-lg px-3 py-1.5 font-mono">
+      <button onClick={copiar} className="shrink-0 flex items-center gap-1.5 text-xs bg-black/5 hover:bg-black/10 transition-all hover:scale-[1.03] rounded-lg px-3 py-1.5 font-mono">
         {copiado ? <Check size={13} className="text-success" /> : <Copy size={13} />}
         {ubicacion.codigo_qr}
       </button>
@@ -108,15 +104,24 @@ function TabUbicaciones() {
 
   return (
     <div className="space-y-4">
-      {mensaje && <p className="text-sm bg-success-bg text-success rounded-lg px-4 py-2.5">{mensaje}</p>}
+      {mensaje && <Alert type="success">{mensaje}</Alert>}
 
       <FormNuevaUbicacion crear={crear} guardando={guardando} onCreada={setMensaje} />
 
       <div>
         <h3 className="font-display font-bold text-ink text-sm mb-2">Ubicaciones existentes</h3>
         <div className="bg-white border border-black/5 rounded-2xl shadow-sm divide-y divide-black/5">
-          {cargando && <p className="text-sm text-muted p-5">Cargando ubicaciones...</p>}
-          {!cargando && ubicaciones.map((u) => <FilaUbicacion key={u.id} ubicacion={u} />)}
+          {cargando && (
+            <div className="p-5 space-y-4">
+              {[1, 2, 3].map((i) => (
+                <div key={i} className="flex items-center justify-between">
+                  <Skeleton className="h-4 w-40" />
+                  <Skeleton className="h-6 w-24 rounded-lg" />
+                </div>
+              ))}
+            </div>
+          )}
+          {!cargando && ubicaciones.map((u, i) => <FilaUbicacion key={u.id} ubicacion={u} indice={i} />)}
           {!cargando && ubicaciones.length === 0 && <p className="text-sm text-muted p-5">No hay ubicaciones registradas todavia.</p>}
         </div>
       </div>
@@ -189,7 +194,7 @@ function FormNuevoTurno({ crear, guardando, onCreado }: { crear: ReturnType<type
         </div>
       </div>
 
-      {error && <p className="text-danger text-sm">{error}</p>}
+      {error && <Alert type="error">{error}</Alert>}
 
       <button type="submit" disabled={guardando} className="bg-primary hover:bg-primary-dark transition-colors text-white font-medium rounded-lg px-4 py-2 text-sm">
         {guardando ? 'Guardando...' : 'Asignar turno'}
@@ -204,14 +209,18 @@ function TabTurnos() {
 
   return (
     <div className="space-y-4">
-      {mensaje && <p className="text-sm bg-success-bg text-success rounded-lg px-4 py-2.5">{mensaje}</p>}
+      {mensaje && <Alert type="success">{mensaje}</Alert>}
 
       <FormNuevoTurno crear={crear} guardando={guardando} onCreado={setMensaje} />
 
       <div>
         <h3 className="font-display font-bold text-ink text-sm mb-2">Turnos asignados</h3>
         <div className="bg-white border border-black/5 rounded-2xl shadow-sm overflow-hidden">
-          {cargando && <p className="text-sm text-muted p-5">Cargando turnos...</p>}
+          {cargando && (
+            <div className="p-5 space-y-3">
+              {[1, 2, 3].map((i) => <Skeleton key={i} className="h-8 w-full" />)}
+            </div>
+          )}
 
           {!cargando && turnos.length > 0 && (
             <div className="overflow-x-auto">
@@ -226,14 +235,14 @@ function TabTurnos() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-black/5">
-                  {turnos.map((t) => (
-                    <tr key={t.id}>
+                  {turnos.map((t, i) => (
+                    <tr key={t.id} className="transition-colors hover:bg-black/[0.02] animate-fade-in-up" style={{ animationDelay: `${i * 25}ms` }}>
                       <td className="px-4 py-3 font-medium text-ink whitespace-nowrap">{t.empleadas?.nombre_completo ?? 'Empleada desconocida'}</td>
                       <td className="px-4 py-3 text-ink whitespace-nowrap">{DIAS_SEMANA[t.dia_semana]}</td>
                       <td className="px-4 py-3 text-ink whitespace-nowrap">{t.hora_inicio.slice(0, 5)} - {t.hora_fin.slice(0, 5)}</td>
                       <td className="px-4 py-3 text-ink">{t.ubicaciones_portales?.nombre ?? 'Edificio desconocido'}</td>
                       <td className="px-4 py-3">
-                        <button onClick={() => eliminar(t.id)} className="text-danger hover:bg-danger-bg transition-colors rounded-lg p-1.5" aria-label="Eliminar turno">
+                        <button onClick={() => eliminar(t.id)} className="text-danger hover:bg-danger-bg transition-all hover:scale-110 rounded-lg p-1.5" aria-label="Eliminar turno">
                           <Trash2 size={15} />
                         </button>
                       </td>

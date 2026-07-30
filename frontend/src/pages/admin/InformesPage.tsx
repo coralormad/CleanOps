@@ -6,6 +6,7 @@ import { useAdminJustificantes } from '../../hooks/useAdminJustificantes'
 import { useAuth } from '../../hooks/useAuth'
 import { descargarExcel } from '../../lib/excelExport'
 import { formatearFechaHora } from '../../lib/formato'
+import { Skeleton } from '../../components/Skeleton'
 
 type Tab = 'horas' | 'asistencia' | 'fueraRadio' | 'justificantes'
 
@@ -34,6 +35,14 @@ function FiltroFechas({ desde, hasta, onDesde, onHasta }: { desde: string; hasta
   )
 }
 
+function TablaSkeleton() {
+  return (
+    <div className="p-5 space-y-3">
+      {[1, 2, 3, 4].map((i) => <Skeleton key={i} className="h-8 w-full" />)}
+    </div>
+  )
+}
+
 function TabHoras() {
   const [desde, setDesde] = useState(fechaHaceDias(30))
   const [hasta, setHasta] = useState(hoyISO())
@@ -50,13 +59,7 @@ function TabHoras() {
   const exportar = () => {
     descargarExcel('horas-trabajadas.xlsx', [{
       nombre: 'Horas trabajadas',
-      filas: turnos.map((t) => ({
-        Empleada: t.empleadaNombre,
-        Edificio: t.ubicacionNombre,
-        Entrada: formatearFechaHora(t.entrada),
-        Salida: formatearFechaHora(t.salida),
-        'Horas (h)': t.horas ?? '',
-      })),
+      filas: turnos.map((t) => ({ Empleada: t.empleadaNombre, Edificio: t.ubicacionNombre, Entrada: formatearFechaHora(t.entrada), Salida: formatearFechaHora(t.salida), 'Horas (h)': t.horas ?? '' })),
     }])
   }
 
@@ -64,12 +67,12 @@ function TabHoras() {
     <div className="space-y-4">
       <div className="bg-white border border-black/5 rounded-2xl shadow-sm p-4 flex justify-between items-end flex-wrap gap-3">
         <FiltroFechas desde={desde} hasta={hasta} onDesde={setDesde} onHasta={setHasta} />
-        <button onClick={exportar} disabled={turnos.length === 0} className="flex items-center gap-2 text-xs bg-primary text-white rounded-lg px-3 py-2 font-medium">
+        <button onClick={exportar} disabled={turnos.length === 0} className="flex items-center gap-2 text-xs bg-primary text-white rounded-lg px-3 py-2 font-medium transition-all hover:scale-[1.03]">
           <Download size={14} /> Exportar Excel
         </button>
       </div>
 
-      <div className="bg-white border border-black/5 rounded-2xl shadow-sm p-4">
+      <div className="bg-white border border-black/5 rounded-2xl shadow-sm p-4 animate-fade-in-up">
         <h3 className="font-display font-bold text-ink text-sm mb-3">Total de horas por empleada</h3>
         <div className="space-y-1.5">
           {[...totalesPorEmpleada.values()].map((v) => (
@@ -83,7 +86,7 @@ function TabHoras() {
       </div>
 
       <div className="bg-white border border-black/5 rounded-2xl shadow-sm overflow-hidden">
-        {cargando && <p className="text-sm text-muted p-5">Cargando...</p>}
+        {cargando && <TablaSkeleton />}
         {!cargando && turnos.length > 0 && (
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
@@ -97,8 +100,8 @@ function TabHoras() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-black/5">
-                {turnos.map((t) => (
-                  <tr key={t.id}>
+                {turnos.map((t, i) => (
+                  <tr key={t.id} className="transition-colors hover:bg-black/[0.02] animate-fade-in-up" style={{ animationDelay: `${i * 20}ms` }}>
                     <td className="px-4 py-3 text-ink whitespace-nowrap">{t.empleadaNombre}</td>
                     <td className="px-4 py-3 text-ink">{t.ubicacionNombre}</td>
                     <td className="px-4 py-3 text-muted whitespace-nowrap">{formatearFechaHora(t.entrada)}</td>
@@ -126,13 +129,7 @@ function TabAsistencia() {
   const exportar = () => {
     descargarExcel('asistencia-por-edificio.xlsx', [{
       nombre: 'Asistencia por edificio',
-      filas: ordenados.map((t) => ({
-        Edificio: t.ubicacionNombre,
-        Empleada: t.empleadaNombre,
-        Entrada: formatearFechaHora(t.entrada),
-        Salida: formatearFechaHora(t.salida),
-        'Horas (h)': t.horas ?? '',
-      })),
+      filas: ordenados.map((t) => ({ Edificio: t.ubicacionNombre, Empleada: t.empleadaNombre, Entrada: formatearFechaHora(t.entrada), Salida: formatearFechaHora(t.salida), 'Horas (h)': t.horas ?? '' })),
     }])
   }
 
@@ -140,13 +137,13 @@ function TabAsistencia() {
     <div className="space-y-4">
       <div className="bg-white border border-black/5 rounded-2xl shadow-sm p-4 flex justify-between items-end flex-wrap gap-3">
         <FiltroFechas desde={desde} hasta={hasta} onDesde={setDesde} onHasta={setHasta} />
-        <button onClick={exportar} disabled={ordenados.length === 0} className="flex items-center gap-2 text-xs bg-primary text-white rounded-lg px-3 py-2 font-medium">
+        <button onClick={exportar} disabled={ordenados.length === 0} className="flex items-center gap-2 text-xs bg-primary text-white rounded-lg px-3 py-2 font-medium transition-all hover:scale-[1.03]">
           <Download size={14} /> Exportar Excel
         </button>
       </div>
 
       <div className="bg-white border border-black/5 rounded-2xl shadow-sm overflow-hidden">
-        {cargando && <p className="text-sm text-muted p-5">Cargando...</p>}
+        {cargando && <TablaSkeleton />}
         {!cargando && ordenados.length > 0 && (
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
@@ -159,8 +156,8 @@ function TabAsistencia() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-black/5">
-                {ordenados.map((t) => (
-                  <tr key={t.id}>
+                {ordenados.map((t, i) => (
+                  <tr key={t.id} className="transition-colors hover:bg-black/[0.02] animate-fade-in-up" style={{ animationDelay: `${i * 20}ms` }}>
                     <td className="px-4 py-3 font-medium text-ink whitespace-nowrap">{t.ubicacionNombre}</td>
                     <td className="px-4 py-3 text-ink">{t.empleadaNombre}</td>
                     <td className="px-4 py-3 text-muted whitespace-nowrap">{formatearFechaHora(t.entrada)}</td>
@@ -185,13 +182,7 @@ function TabFueraDeRadio() {
   const exportar = () => {
     descargarExcel('fichajes-fuera-de-radio.xlsx', [{
       nombre: 'Fuera de radio',
-      filas: fichajes.map((f) => ({
-        Empleada: f.empleadas?.nombre_completo ?? 'Desconocida',
-        Edificio: f.ubicaciones_portales?.nombre ?? 'Edificio',
-        Tipo: f.tipo,
-        Fecha: formatearFechaHora(f.fecha_hora_dispositivo),
-        'Distancia (m)': f.distancia_metros ? Math.round(f.distancia_metros) : '',
-      })),
+      filas: fichajes.map((f) => ({ Empleada: f.empleadas?.nombre_completo ?? 'Desconocida', Edificio: f.ubicaciones_portales?.nombre ?? 'Edificio', Tipo: f.tipo, Fecha: formatearFechaHora(f.fecha_hora_dispositivo), 'Distancia (m)': f.distancia_metros ? Math.round(f.distancia_metros) : '' })),
     }])
   }
 
@@ -199,13 +190,13 @@ function TabFueraDeRadio() {
     <div className="space-y-4">
       <div className="bg-white border border-black/5 rounded-2xl shadow-sm p-4 flex justify-between items-end flex-wrap gap-3">
         <FiltroFechas desde={desde} hasta={hasta} onDesde={setDesde} onHasta={setHasta} />
-        <button onClick={exportar} disabled={fichajes.length === 0} className="flex items-center gap-2 text-xs bg-primary text-white rounded-lg px-3 py-2 font-medium">
+        <button onClick={exportar} disabled={fichajes.length === 0} className="flex items-center gap-2 text-xs bg-primary text-white rounded-lg px-3 py-2 font-medium transition-all hover:scale-[1.03]">
           <Download size={14} /> Exportar Excel
         </button>
       </div>
 
       <div className="bg-white border border-black/5 rounded-2xl shadow-sm overflow-hidden">
-        {cargando && <p className="text-sm text-muted p-5">Cargando...</p>}
+        {cargando && <TablaSkeleton />}
         {!cargando && fichajes.length > 0 && (
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
@@ -219,8 +210,8 @@ function TabFueraDeRadio() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-black/5">
-                {fichajes.map((f) => (
-                  <tr key={f.id}>
+                {fichajes.map((f, i) => (
+                  <tr key={f.id} className="transition-colors hover:bg-black/[0.02] animate-fade-in-up" style={{ animationDelay: `${i * 20}ms` }}>
                     <td className="px-4 py-3 font-medium text-ink whitespace-nowrap">{f.empleadas?.nombre_completo ?? 'Desconocida'}</td>
                     <td className="px-4 py-3 text-ink">{f.ubicaciones_portales?.nombre ?? 'Edificio'}</td>
                     <td className="px-4 py-3 text-ink capitalize">{f.tipo}</td>
@@ -249,14 +240,7 @@ function TabJustificantes() {
   const exportar = () => {
     descargarExcel('justificantes.xlsx', [{
       nombre: 'Justificantes',
-      filas: filtrados.map((j) => ({
-        Empleada: j.empleadas?.nombre_completo ?? 'Desconocida',
-        Tipo: j.tipo,
-        Desde: j.fecha_inicio,
-        Hasta: j.fecha_fin,
-        Estado: j.estado,
-        Motivo: j.motivo ?? '',
-      })),
+      filas: filtrados.map((j) => ({ Empleada: j.empleadas?.nombre_completo ?? 'Desconocida', Tipo: j.tipo, Desde: j.fecha_inicio, Hasta: j.fecha_fin, Estado: j.estado, Motivo: j.motivo ?? '' })),
     }])
   }
 
@@ -270,13 +254,13 @@ function TabJustificantes() {
     <div className="space-y-4">
       <div className="bg-white border border-black/5 rounded-2xl shadow-sm p-4 flex justify-between items-end flex-wrap gap-3">
         <FiltroFechas desde={desde} hasta={hasta} onDesde={setDesde} onHasta={setHasta} />
-        <button onClick={exportar} disabled={filtrados.length === 0} className="flex items-center gap-2 text-xs bg-primary text-white rounded-lg px-3 py-2 font-medium">
+        <button onClick={exportar} disabled={filtrados.length === 0} className="flex items-center gap-2 text-xs bg-primary text-white rounded-lg px-3 py-2 font-medium transition-all hover:scale-[1.03]">
           <Download size={14} /> Exportar Excel
         </button>
       </div>
 
       <div className="bg-white border border-black/5 rounded-2xl shadow-sm overflow-hidden">
-        {cargando && <p className="text-sm text-muted p-5">Cargando...</p>}
+        {cargando && <TablaSkeleton />}
         {!cargando && filtrados.length > 0 && (
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
@@ -289,8 +273,8 @@ function TabJustificantes() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-black/5">
-                {filtrados.map((j) => (
-                  <tr key={j.id}>
+                {filtrados.map((j, i) => (
+                  <tr key={j.id} className="transition-colors hover:bg-black/[0.02] animate-fade-in-up" style={{ animationDelay: `${i * 20}ms` }}>
                     <td className="px-4 py-3 font-medium text-ink whitespace-nowrap">{j.empleadas?.nombre_completo ?? 'Desconocida'}</td>
                     <td className="px-4 py-3 text-ink capitalize whitespace-nowrap">{j.tipo.replace('_', ' ')}</td>
                     <td className="px-4 py-3 text-muted whitespace-nowrap">{j.fecha_inicio} a {j.fecha_fin}</td>
