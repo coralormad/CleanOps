@@ -79,8 +79,8 @@ export function useTurnos() {
     if (turno) {
       const nombreUbicacion = turno.ubicaciones_portales?.nombre ?? 'un edificio'
       const mensajeAviso = 'Se ha eliminado tu turno de ' + DIAS[turno.dia_semana] + ' en ' + nombreUbicacion
-    notificarEmpleada(turno.empleada_id, mensajeAviso, '/horario') 
-}
+        notificarEmpleada(turno.empleada_id, mensajeAviso, '/horario')
+    }
 
     await cargar()
   }
