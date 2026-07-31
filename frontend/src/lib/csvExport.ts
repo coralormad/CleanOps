@@ -5,15 +5,15 @@ export function descargarCSV(nombreArchivo: string, filas: Record<string, string
 
   const escapar = (valor: string | number) => {
     const texto = String(valor)
-    if (texto.includes(',') || texto.includes('"') || texto.includes('\n')) {
+    if (texto.includes(';') || texto.includes('"') || texto.includes('\n')) {
       return '"' + texto.replace(/"/g, '""') + '"'
     }
     return texto
   }
 
-  const lineas = [columnas.join(',')]
+  const lineas = [columnas.join(';')]
   for (const fila of filas) {
-    lineas.push(columnas.map((c) => escapar(fila[c])).join(','))
+    lineas.push(columnas.map((c) => escapar(fila[c])).join(';'))
   }
 
   const csv = lineas.join('\n')

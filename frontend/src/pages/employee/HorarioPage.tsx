@@ -1,6 +1,6 @@
 import { useAuth } from '../../hooks/useAuth'
 import { useMisTurnos } from '../../hooks/useMisTurnos'
-import { ExternalLink } from 'lucide-react'
+import { ExternalLink, MapPin, Clock } from 'lucide-react'
 import { Skeleton } from '../../components/Skeleton'
 
 const DIAS_SEMANA = ['', 'Lunes', 'Martes', 'Miercoles', 'Jueves', 'Viernes', 'Sabado', 'Domingo']
@@ -22,42 +22,71 @@ export function HorarioPage() {
   }
 
   return (
-    <div className="bg-white border border-black/5 rounded-2xl shadow-sm overflow-hidden animate-fade-in-up">
-      <div className="overflow-x-auto">
-        <table className="w-full text-sm">
-          <thead>
-            <tr className="border-b border-black/5 bg-black/[0.02]">
-              <th className="text-left font-medium text-muted px-4 py-3">Dia</th>
-              <th className="text-left font-medium text-muted px-4 py-3">Horario</th>
-              <th className="text-left font-medium text-muted px-4 py-3">Edificio</th>
-              <th className="text-left font-medium text-muted px-4 py-3 hidden sm:table-cell">Direccion</th>
-              <th className="text-left font-medium text-muted px-4 py-3"></th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-black/5">
-            {turnos.map((t, i) => {
-              const ubicacion = t.ubicaciones_portales
-              const enlaceMapa = ubicacion ? 'https://www.google.com/maps/dir/?api=1&destination=' + ubicacion.latitud + ',' + ubicacion.longitud : null
+    <>
+      {/* Vista movil: tarjetas apiladas, sin scroll horizontal */}
+      <div className="sm:hidden space-y-3">
+        {turnos.map((t, i) => {
+          const ubicacion = t.ubicaciones_portales
+          const enlaceMapa = ubicacion ? 'https://www.google.com/maps/dir/?api=1&destination=' + ubicacion.latitud + ',' + ubicacion.longitud : null
 
-              return (
-                <tr key={t.id} className="transition-colors hover:bg-black/[0.02] animate-fade-in-up" style={{ animationDelay: `${i * 30}ms` }}>
-                  <td className="px-4 py-3 font-medium text-ink whitespace-nowrap">{DIAS_SEMANA[t.dia_semana]}</td>
-                  <td className="px-4 py-3 text-ink whitespace-nowrap">{t.hora_inicio.slice(0, 5)} - {t.hora_fin.slice(0, 5)}</td>
-                  <td className="px-4 py-3 text-ink">{ubicacion?.nombre ?? 'Edificio'}</td>
-                  <td className="px-4 py-3 text-muted hidden sm:table-cell">{ubicacion?.direccion ?? '-'}</td>
-                  <td className="px-4 py-3">
-                    {enlaceMapa && (
-                      <a href={enlaceMapa} target="_blank" rel="noopener noreferrer" className="text-primary font-medium text-xs flex items-center gap-1 whitespace-nowrap transition-transform hover:scale-105">
-                        Ir <ExternalLink size={12} />
-                      </a>
-                    )}
-                  </td>
-                </tr>
-              )
-            })}
-          </tbody>
-        </table>
+          return (
+            <div key={t.id} className="bg-white border border-black/5 rounded-2xl shadow-sm p-4 space-y-1.5 animate-fade-in-up" style={{ animationDelay: `${i * 30}ms` }}>
+              <p className="font-display font-bold text-ink text-sm">{DIAS_SEMANA[t.dia_semana]}</p>
+              <p className="text-sm text-muted flex items-center gap-1.5">
+                <Clock size={13} /> {t.hora_inicio.slice(0, 5)} - {t.hora_fin.slice(0, 5)}
+              </p>
+              <p className="text-sm text-ink flex items-center gap-1.5">
+                <MapPin size={13} /> {ubicacion?.nombre ?? 'Edificio'}
+              </p>
+              {ubicacion?.direccion && <p className="text-xs text-muted pl-5">{ubicacion.direccion}</p>}
+              {enlaceMapa && (
+                <a href={enlaceMapa} target="_blank" rel="noopener noreferrer" className="text-primary font-medium text-xs flex items-center gap-1 pt-1">
+                  Como llegar <ExternalLink size={12} />
+                </a>
+              )}
+            </div>
+          )
+        })}
       </div>
-    </div>
+
+      {/* Vista tablet/escritorio: tabla de columnas */}
+      <div className="hidden sm:block bg-white border border-black/5 rounded-2xl shadow-sm overflow-hidden animate-fade-in-up">
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="border-b border-black/5 bg-black/[0.02]">
+                <th className="text-left font-medium text-muted px-4 py-3">Dia</th>
+                <th className="text-left font-medium text-muted px-4 py-3">Horario</th>
+                <th className="text-left font-medium text-muted px-4 py-3">Edificio</th>
+                <th className="text-left font-medium text-muted px-4 py-3">Direccion</th>
+                <th className="text-left font-medium text-muted px-4 py-3"></th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-black/5">
+              {turnos.map((t, i) => {
+                const ubicacion = t.ubicaciones_portales
+                const enlaceMapa = ubicacion ? 'https://www.google.com/maps/dir/?api=1&destination=' + ubicacion.latitud + ',' + ubicacion.longitud : null
+
+                return (
+                  <tr key={t.id} className="transition-colors hover:bg-black/[0.02] animate-fade-in-up" style={{ animationDelay: `${i * 30}ms` }}>
+                    <td className="px-4 py-3 font-medium text-ink whitespace-nowrap">{DIAS_SEMANA[t.dia_semana]}</td>
+                    <td className="px-4 py-3 text-ink whitespace-nowrap">{t.hora_inicio.slice(0, 5)} - {t.hora_fin.slice(0, 5)}</td>
+                    <td className="px-4 py-3 text-ink">{ubicacion?.nombre ?? 'Edificio'}</td>
+                    <td className="px-4 py-3 text-muted">{ubicacion?.direccion ?? '-'}</td>
+                    <td className="px-4 py-3">
+                      {enlaceMapa && (
+                        <a href={enlaceMapa} target="_blank" rel="noopener noreferrer" className="text-primary font-medium text-xs flex items-center gap-1 whitespace-nowrap transition-transform hover:scale-105">
+                          Ir <ExternalLink size={12} />
+                        </a>
+                      )}
+                    </td>
+                  </tr>
+                )
+              })}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </>
   )
 }

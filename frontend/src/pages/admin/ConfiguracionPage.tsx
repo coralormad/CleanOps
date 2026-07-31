@@ -1,5 +1,5 @@
 import { useState, type FormEvent } from 'react'
-import { Settings, MapPin, Copy, Check, Trash2 } from 'lucide-react'
+import { Settings, MapPin, Copy, Check, Trash2, Clock } from 'lucide-react'
 import { useUbicaciones, type Ubicacion } from '../../hooks/useUbicaciones'
 import { useTurnos } from '../../hooks/useTurnos'
 import { useEmpleadas } from '../../hooks/useEmpleadas'
@@ -215,46 +215,70 @@ function TabTurnos() {
 
       <div>
         <h3 className="font-display font-bold text-ink text-sm mb-2">Turnos asignados</h3>
-        <div className="bg-white border border-black/5 rounded-2xl shadow-sm overflow-hidden">
-          {cargando && (
-            <div className="p-5 space-y-3">
-              {[1, 2, 3].map((i) => <Skeleton key={i} className="h-8 w-full" />)}
-            </div>
-          )}
 
-          {!cargando && turnos.length > 0 && (
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="border-b border-black/5 bg-black/[0.02]">
-                    <th className="text-left font-medium text-muted px-4 py-3">Empleada</th>
-                    <th className="text-left font-medium text-muted px-4 py-3">Dia</th>
-                    <th className="text-left font-medium text-muted px-4 py-3">Horario</th>
-                    <th className="text-left font-medium text-muted px-4 py-3">Edificio</th>
-                    <th className="text-left font-medium text-muted px-4 py-3"></th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-black/5">
-                  {turnos.map((t, i) => (
-                    <tr key={t.id} className="transition-colors hover:bg-black/[0.02] animate-fade-in-up" style={{ animationDelay: `${i * 25}ms` }}>
-                      <td className="px-4 py-3 font-medium text-ink whitespace-nowrap">{t.empleadas?.nombre_completo ?? 'Empleada desconocida'}</td>
-                      <td className="px-4 py-3 text-ink whitespace-nowrap">{DIAS_SEMANA[t.dia_semana]}</td>
-                      <td className="px-4 py-3 text-ink whitespace-nowrap">{t.hora_inicio.slice(0, 5)} - {t.hora_fin.slice(0, 5)}</td>
-                      <td className="px-4 py-3 text-ink">{t.ubicaciones_portales?.nombre ?? 'Edificio desconocido'}</td>
-                      <td className="px-4 py-3">
-                        <button onClick={() => eliminar(t.id)} className="text-danger hover:bg-danger-bg transition-all hover:scale-110 rounded-lg p-1.5" aria-label="Eliminar turno">
-                          <Trash2 size={15} />
-                        </button>
-                      </td>
+        {cargando && (
+          <div className="bg-white border border-black/5 rounded-2xl shadow-sm p-5 space-y-3">
+            {[1, 2, 3].map((i) => <Skeleton key={i} className="h-8 w-full" />)}
+          </div>
+        )}
+
+        {!cargando && turnos.length > 0 && (
+          <>
+            {/* Vista movil: tarjetas apiladas */}
+            <div className="sm:hidden space-y-3">
+              {turnos.map((t, i) => (
+                <div key={t.id} className="bg-white border border-black/5 rounded-2xl shadow-sm p-4 space-y-1.5 animate-fade-in-up" style={{ animationDelay: `${i * 25}ms` }}>
+                  <div className="flex items-start justify-between gap-2">
+                    <p className="font-medium text-ink text-sm">{t.empleadas?.nombre_completo ?? 'Empleada desconocida'}</p>
+                    <button onClick={() => eliminar(t.id)} className="text-danger hover:bg-danger-bg transition-all hover:scale-110 rounded-lg p-1 shrink-0" aria-label="Eliminar turno">
+                      <Trash2 size={15} />
+                    </button>
+                  </div>
+                  <p className="text-sm text-muted flex items-center gap-1.5">
+                    <Clock size={13} /> {DIAS_SEMANA[t.dia_semana]}, {t.hora_inicio.slice(0, 5)} - {t.hora_fin.slice(0, 5)}
+                  </p>
+                  <p className="text-sm text-ink flex items-center gap-1.5">
+                    <MapPin size={13} /> {t.ubicaciones_portales?.nombre ?? 'Edificio desconocido'}
+                  </p>
+                </div>
+              ))}
+            </div>
+
+            {/* Vista tablet/escritorio: tabla */}
+            <div className="hidden sm:block bg-white border border-black/5 rounded-2xl shadow-sm overflow-hidden">
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="border-b border-black/5 bg-black/[0.02]">
+                      <th className="text-left font-medium text-muted px-4 py-3">Empleada</th>
+                      <th className="text-left font-medium text-muted px-4 py-3">Dia</th>
+                      <th className="text-left font-medium text-muted px-4 py-3">Horario</th>
+                      <th className="text-left font-medium text-muted px-4 py-3">Edificio</th>
+                      <th className="text-left font-medium text-muted px-4 py-3"></th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody className="divide-y divide-black/5">
+                    {turnos.map((t, i) => (
+                      <tr key={t.id} className="transition-colors hover:bg-black/[0.02] animate-fade-in-up" style={{ animationDelay: `${i * 25}ms` }}>
+                        <td className="px-4 py-3 font-medium text-ink whitespace-nowrap">{t.empleadas?.nombre_completo ?? 'Empleada desconocida'}</td>
+                        <td className="px-4 py-3 text-ink whitespace-nowrap">{DIAS_SEMANA[t.dia_semana]}</td>
+                        <td className="px-4 py-3 text-ink whitespace-nowrap">{t.hora_inicio.slice(0, 5)} - {t.hora_fin.slice(0, 5)}</td>
+                        <td className="px-4 py-3 text-ink">{t.ubicaciones_portales?.nombre ?? 'Edificio desconocido'}</td>
+                        <td className="px-4 py-3">
+                          <button onClick={() => eliminar(t.id)} className="text-danger hover:bg-danger-bg transition-all hover:scale-110 rounded-lg p-1.5" aria-label="Eliminar turno">
+                            <Trash2 size={15} />
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             </div>
-          )}
+          </>
+        )}
 
-          {!cargando && turnos.length === 0 && <p className="text-sm text-muted p-5">No hay turnos asignados todavia.</p>}
-        </div>
+        {!cargando && turnos.length === 0 && <p className="text-sm text-muted bg-white border border-black/5 rounded-2xl shadow-sm p-5">No hay turnos asignados todavia.</p>}
       </div>
     </div>
   )
