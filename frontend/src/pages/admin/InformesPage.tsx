@@ -3,11 +3,12 @@ import { Download, User, Building2, Clock, Navigation, ScanLine, Calendar } from
 import { useTurnosEmparejados } from '../../hooks/useTurnosEmparejados'
 import { useInformeFueraDeRadio } from '../../hooks/useInformeFueraDeRadio'
 import { useAdminJustificantes } from '../../hooks/useAdminJustificantes'
+import { useTurnos } from '../../hooks/useTurnos'
 import { useAuth } from '../../hooks/useAuth'
 import { descargarExcel } from '../../lib/excelExport'
 import { formatearFechaHora } from '../../lib/formato'
 import { Skeleton } from '../../components/Skeleton'
-import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, Tooltip, Cell } from 'recharts'
+import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, Tooltip, Legend } from 'recharts'
 
 type Tab = 'horas' | 'asistencia' | 'fueraRadio' | 'justificantes'
 
@@ -19,6 +20,25 @@ function fechaHaceDias(dias: number): string {
 
 function hoyISO(): string {
   return new Date().toISOString().slice(0, 10)
+}
+
+function contarOcurrenciasDia(diaSemana: number, desdeISO: string, hastaISO: string): number {
+  let contador = 0
+  const actual = new Date(desdeISO + 'T12:00:00')
+  const fin = new Date(hastaISO + 'T12:00:00')
+  while (actual <= fin) {
+    const diaJs = actual.getDay()
+    const diaNormalizado = diaJs === 0 ? 7 : diaJs
+    if (diaNormalizado === diaSemana) contador++
+    actual.setDate(actual.getDate() + 1)
+  }
+  return contador
+}
+
+function duracionHoras(inicio: string, fin: string): number {
+  const [hIni, mIni] = inicio.slice(0, 5).split(':').map(Number)
+  const [hFin, mFin] = fin.slice(0, 5).split(':').map(Number)
+  return (hFin * 60 + mFin - (hIni * 60 + mIni)) / 60
 }
 
 function FiltroFechas({ desde, hasta, onDesde, onHasta }: { desde: string; hasta: string; onDesde: (v: string) => void; onHasta: (v: string) => void }) {
@@ -48,20 +68,34 @@ function TabHoras() {
   const [desde, setDesde] = useState(fechaHaceDias(30))
   const [hasta, setHasta] = useState(hoyISO())
   const { turnos, cargando } = useTurnosEmparejados({ desde: desde + 'T00:00:00', hasta: hasta + 'T23:59:59' })
+  const { turnos: turnosAsignados } = useTurnos()
 
-  const totalesPorEmpleada = new Map<string, { nombre: string; horas: number }>()
+  const trabajadasPorEmpleada = new Map<string, { nombre: string; horas: number }>()
   for (const t of turnos) {
     if (t.horas === null) continue
-    const actual = totalesPorEmpleada.get(t.empleadaId) ?? { nombre: t.empleadaNombre, horas: 0 }
+    const actual = trabajadasPorEmpleada.get(t.empleadaId) ?? { nombre: t.empleadaNombre, horas: 0 }
     actual.horas += t.horas
-    totalesPorEmpleada.set(t.empleadaId, actual)
+    trabajadasPorEmpleada.set(t.empleadaId, actual)
   }
 
-  const datosGrafica = [...totalesPorEmpleada.values()]
-    .map((v) => ({ nombre: v.nombre, horas: Math.round(v.horas * 100) / 100 }))
-    .sort((a, b) => b.horas - a.horas)
+  const asignadasPorEmpleada = new Map<string, { nombre: string; horas: number }>()
+  for (const t of turnosAsignados) {
+    const ocurrencias = contarOcurrenciasDia(t.dia_semana, desde, hasta)
+    if (ocurrencias === 0) continue
+    const horasTurno = duracionHoras(t.hora_inicio, t.hora_fin) * ocurrencias
+    const actual = asignadasPorEmpleada.get(t.empleada_id) ?? { nombre: t.empleadas?.nombre_completo ?? 'Empleada', horas: 0 }
+    actual.horas += horasTurno
+    asignadasPorEmpleada.set(t.empleada_id, actual)
+  }
 
-  const COLORES = ['#1E4B5F', '#2E6B85', '#4A7C59', '#C9862F', '#6B7680', '#B54A3F']
+  const idsUnion = new Set([...trabajadasPorEmpleada.keys(), ...asignadasPorEmpleada.keys()])
+  const datosGrafica = [...idsUnion]
+    .map((id) => ({
+      nombre: trabajadasPorEmpleada.get(id)?.nombre ?? asignadasPorEmpleada.get(id)?.nombre ?? 'Empleada',
+      asignadas: Math.round((asignadasPorEmpleada.get(id)?.horas ?? 0) * 100) / 100,
+      trabajadas: Math.round((trabajadasPorEmpleada.get(id)?.horas ?? 0) * 100) / 100,
+    }))
+    .sort((a, b) => b.asignadas - a.asignadas)
 
   const exportar = () => {
     descargarExcel('horas-trabajadas.xlsx', [{
@@ -80,19 +114,19 @@ function TabHoras() {
       </div>
 
       <div className="bg-white border border-black/5 rounded-2xl shadow-sm p-4 animate-fade-in-up">
-        <h3 className="font-display font-bold text-ink text-sm mb-3">Total de horas por empleada</h3>
+        <h3 className="font-display font-bold text-ink text-sm mb-1">Horas asignadas vs. trabajadas</h3>
+        <p className="text-xs text-muted mb-3">Segun los turnos fijados en Configuracion, ajustados al periodo seleccionado arriba.</p>
         {datosGrafica.length === 0 ? (
           <p className="text-sm text-muted">Sin datos en este periodo.</p>
         ) : (
-          <ResponsiveContainer width="100%" height={Math.max(datosGrafica.length * 42, 120)}>
+          <ResponsiveContainer width="100%" height={Math.max(datosGrafica.length * 50, 140)}>
             <BarChart data={datosGrafica} layout="vertical" margin={{ left: 0, right: 24 }}>
               <XAxis type="number" hide />
               <YAxis type="category" dataKey="nombre" width={110} tick={{ fontSize: 12, fill: '#1A2226' }} axisLine={false} tickLine={false} />
-            <Tooltip cursor={{ fill: 'rgba(30,75,95,0.06)' }} contentStyle={{ borderRadius: 12, border: '1px solid rgba(0,0,0,0.08)', fontSize: 13 }} formatter={(value) => [(Number(value) || 0).toFixed(2) + ' h', 'Horas']} />              <Bar dataKey="horas" radius={[0, 6, 6, 0]} barSize={22}>
-                {datosGrafica.map((_, i) => (
-                  <Cell key={i} fill={COLORES[i % COLORES.length]} />
-                ))}
-              </Bar>
+              <Tooltip cursor={{ fill: 'rgba(30,75,95,0.06)' }} contentStyle={{ borderRadius: 12, border: '1px solid rgba(0,0,0,0.08)', fontSize: 13 }} formatter={(value) => (Number(value) || 0).toFixed(2) + ' h'} />
+              <Legend wrapperStyle={{ fontSize: 12 }} />
+              <Bar dataKey="asignadas" name="Asignadas" fill="#C9D6DC" radius={[0, 6, 6, 0]} barSize={14} />
+              <Bar dataKey="trabajadas" name="Trabajadas" fill="#1E4B5F" radius={[0, 6, 6, 0]} barSize={14} />
             </BarChart>
           </ResponsiveContainer>
         )}
