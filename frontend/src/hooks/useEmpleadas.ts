@@ -7,6 +7,7 @@ export interface EmpleadaListado {
   nombre_completo: string
   rol: Rol
   activo: boolean
+  email: string | null
 }
 
 interface NuevaEmpleada {
@@ -27,7 +28,19 @@ export function useEmpleadas() {
       .select('id, nombre_completo, rol, activo')
       .order('nombre_completo', { ascending: true })
 
-    if (!error && data) setEmpleadas(data)
+    if (!error && data) {
+      const { data: emails } = await supabase.rpc('get_emails_empleadas')
+
+      const mapaEmails = new Map<string, string>()
+      if (emails) {
+        for (const fila of emails as { id: string; email: string }[]) {
+          mapaEmails.set(fila.id, fila.email)
+        }
+      }
+
+      const conEmails = data.map((e) => ({ ...e, email: mapaEmails.get(e.id) ?? null }))
+      setEmpleadas(conEmails as EmpleadaListado[])
+    }
     setCargando(false)
   }, [])
 

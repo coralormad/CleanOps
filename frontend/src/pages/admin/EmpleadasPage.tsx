@@ -85,6 +85,7 @@ function TabPlantilla() {
         >
           <div className="min-w-0">
             <p className="text-sm font-medium text-ink truncate">{e.nombre_completo}</p>
+            {e.email && <p className="text-xs text-muted truncate mt-0.5">{e.email}</p>}
             <span className={`text-xs px-2 py-0.5 rounded-full font-medium inline-block mt-1 ${badgeRol(e.rol)}`}>
               {e.rol}
             </span>
