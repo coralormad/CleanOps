@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Download } from 'lucide-react'
+import { Download, User, Building2, Clock, Navigation, ScanLine, Calendar } from 'lucide-react'
 import { useTurnosEmparejados } from '../../hooks/useTurnosEmparejados'
 import { useInformeFueraDeRadio } from '../../hooks/useInformeFueraDeRadio'
 import { useAdminJustificantes } from '../../hooks/useAdminJustificantes'
@@ -85,36 +85,51 @@ function TabHoras() {
         </div>
       </div>
 
-      <div className="bg-white border border-black/5 rounded-2xl shadow-sm overflow-hidden">
-        {cargando && <TablaSkeleton />}
-        {!cargando && turnos.length > 0 && (
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b border-black/5 bg-black/[0.02]">
-                  <th className="text-left font-medium text-muted px-4 py-3">Empleada</th>
-                  <th className="text-left font-medium text-muted px-4 py-3">Edificio</th>
-                  <th className="text-left font-medium text-muted px-4 py-3">Entrada</th>
-                  <th className="text-left font-medium text-muted px-4 py-3">Salida</th>
-                  <th className="text-left font-medium text-muted px-4 py-3">Horas</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-black/5">
-                {turnos.map((t, i) => (
-                  <tr key={t.id} className="transition-colors hover:bg-black/[0.02] animate-fade-in-up" style={{ animationDelay: `${i * 20}ms` }}>
-                    <td className="px-4 py-3 text-ink whitespace-nowrap">{t.empleadaNombre}</td>
-                    <td className="px-4 py-3 text-ink">{t.ubicacionNombre}</td>
-                    <td className="px-4 py-3 text-muted whitespace-nowrap">{formatearFechaHora(t.entrada)}</td>
-                    <td className="px-4 py-3 text-muted whitespace-nowrap">{formatearFechaHora(t.salida)}</td>
-                    <td className="px-4 py-3 text-ink whitespace-nowrap">{t.horas !== null ? t.horas.toFixed(2) + ' h' : '-'}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+      {cargando && <div className="bg-white border border-black/5 rounded-2xl shadow-sm"><TablaSkeleton /></div>}
+
+      {!cargando && turnos.length > 0 && (
+        <>
+          <div className="sm:hidden space-y-3">
+            {turnos.map((t, i) => (
+              <div key={t.id} className="bg-white border border-black/5 rounded-2xl shadow-sm p-4 space-y-1 animate-fade-in-up" style={{ animationDelay: `${i * 20}ms` }}>
+                <p className="font-medium text-ink text-sm flex items-center gap-1.5"><User size={13} /> {t.empleadaNombre}</p>
+                <p className="text-xs text-muted flex items-center gap-1.5"><Building2 size={12} /> {t.ubicacionNombre}</p>
+                <p className="text-xs text-muted flex items-center gap-1.5"><Clock size={12} /> {formatearFechaHora(t.entrada)} - {formatearFechaHora(t.salida)}</p>
+                <p className="text-sm font-medium text-ink pt-1">{t.horas !== null ? t.horas.toFixed(2) + ' h' : 'Sin cerrar'}</p>
+              </div>
+            ))}
           </div>
-        )}
-        {!cargando && turnos.length === 0 && <p className="text-sm text-muted p-5">No hay fichajes en este periodo.</p>}
-      </div>
+
+          <div className="hidden sm:block bg-white border border-black/5 rounded-2xl shadow-sm overflow-hidden">
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b border-black/5 bg-black/[0.02]">
+                    <th className="text-left font-medium text-muted px-4 py-3">Empleada</th>
+                    <th className="text-left font-medium text-muted px-4 py-3">Edificio</th>
+                    <th className="text-left font-medium text-muted px-4 py-3">Entrada</th>
+                    <th className="text-left font-medium text-muted px-4 py-3">Salida</th>
+                    <th className="text-left font-medium text-muted px-4 py-3">Horas</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-black/5">
+                  {turnos.map((t, i) => (
+                    <tr key={t.id} className="transition-colors hover:bg-black/[0.02] animate-fade-in-up" style={{ animationDelay: `${i * 20}ms` }}>
+                      <td className="px-4 py-3 text-ink whitespace-nowrap">{t.empleadaNombre}</td>
+                      <td className="px-4 py-3 text-ink">{t.ubicacionNombre}</td>
+                      <td className="px-4 py-3 text-muted whitespace-nowrap">{formatearFechaHora(t.entrada)}</td>
+                      <td className="px-4 py-3 text-muted whitespace-nowrap">{formatearFechaHora(t.salida)}</td>
+                      <td className="px-4 py-3 text-ink whitespace-nowrap">{t.horas !== null ? t.horas.toFixed(2) + ' h' : '-'}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </>
+      )}
+
+      {!cargando && turnos.length === 0 && <p className="text-sm text-muted bg-white border border-black/5 rounded-2xl shadow-sm p-5">No hay fichajes en este periodo.</p>}
     </div>
   )
 }
@@ -142,34 +157,48 @@ function TabAsistencia() {
         </button>
       </div>
 
-      <div className="bg-white border border-black/5 rounded-2xl shadow-sm overflow-hidden">
-        {cargando && <TablaSkeleton />}
-        {!cargando && ordenados.length > 0 && (
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b border-black/5 bg-black/[0.02]">
-                  <th className="text-left font-medium text-muted px-4 py-3">Edificio</th>
-                  <th className="text-left font-medium text-muted px-4 py-3">Empleada</th>
-                  <th className="text-left font-medium text-muted px-4 py-3">Entrada</th>
-                  <th className="text-left font-medium text-muted px-4 py-3">Salida</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-black/5">
-                {ordenados.map((t, i) => (
-                  <tr key={t.id} className="transition-colors hover:bg-black/[0.02] animate-fade-in-up" style={{ animationDelay: `${i * 20}ms` }}>
-                    <td className="px-4 py-3 font-medium text-ink whitespace-nowrap">{t.ubicacionNombre}</td>
-                    <td className="px-4 py-3 text-ink">{t.empleadaNombre}</td>
-                    <td className="px-4 py-3 text-muted whitespace-nowrap">{formatearFechaHora(t.entrada)}</td>
-                    <td className="px-4 py-3 text-muted whitespace-nowrap">{formatearFechaHora(t.salida)}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+      {cargando && <div className="bg-white border border-black/5 rounded-2xl shadow-sm"><TablaSkeleton /></div>}
+
+      {!cargando && ordenados.length > 0 && (
+        <>
+          <div className="sm:hidden space-y-3">
+            {ordenados.map((t, i) => (
+              <div key={t.id} className="bg-white border border-black/5 rounded-2xl shadow-sm p-4 space-y-1 animate-fade-in-up" style={{ animationDelay: `${i * 20}ms` }}>
+                <p className="font-medium text-ink text-sm flex items-center gap-1.5"><Building2 size={13} /> {t.ubicacionNombre}</p>
+                <p className="text-xs text-muted flex items-center gap-1.5"><User size={12} /> {t.empleadaNombre}</p>
+                <p className="text-xs text-muted flex items-center gap-1.5"><Clock size={12} /> {formatearFechaHora(t.entrada)} - {formatearFechaHora(t.salida)}</p>
+              </div>
+            ))}
           </div>
-        )}
-        {!cargando && ordenados.length === 0 && <p className="text-sm text-muted p-5">No hay fichajes en este periodo.</p>}
-      </div>
+
+          <div className="hidden sm:block bg-white border border-black/5 rounded-2xl shadow-sm overflow-hidden">
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b border-black/5 bg-black/[0.02]">
+                    <th className="text-left font-medium text-muted px-4 py-3">Edificio</th>
+                    <th className="text-left font-medium text-muted px-4 py-3">Empleada</th>
+                    <th className="text-left font-medium text-muted px-4 py-3">Entrada</th>
+                    <th className="text-left font-medium text-muted px-4 py-3">Salida</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-black/5">
+                  {ordenados.map((t, i) => (
+                    <tr key={t.id} className="transition-colors hover:bg-black/[0.02] animate-fade-in-up" style={{ animationDelay: `${i * 20}ms` }}>
+                      <td className="px-4 py-3 font-medium text-ink whitespace-nowrap">{t.ubicacionNombre}</td>
+                      <td className="px-4 py-3 text-ink">{t.empleadaNombre}</td>
+                      <td className="px-4 py-3 text-muted whitespace-nowrap">{formatearFechaHora(t.entrada)}</td>
+                      <td className="px-4 py-3 text-muted whitespace-nowrap">{formatearFechaHora(t.salida)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </>
+      )}
+
+      {!cargando && ordenados.length === 0 && <p className="text-sm text-muted bg-white border border-black/5 rounded-2xl shadow-sm p-5">No hay fichajes en este periodo.</p>}
     </div>
   )
 }
@@ -195,36 +224,53 @@ function TabFueraDeRadio() {
         </button>
       </div>
 
-      <div className="bg-white border border-black/5 rounded-2xl shadow-sm overflow-hidden">
-        {cargando && <TablaSkeleton />}
-        {!cargando && fichajes.length > 0 && (
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b border-black/5 bg-black/[0.02]">
-                  <th className="text-left font-medium text-muted px-4 py-3">Empleada</th>
-                  <th className="text-left font-medium text-muted px-4 py-3">Edificio</th>
-                  <th className="text-left font-medium text-muted px-4 py-3">Tipo</th>
-                  <th className="text-left font-medium text-muted px-4 py-3">Fecha</th>
-                  <th className="text-left font-medium text-muted px-4 py-3">Distancia</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-black/5">
-                {fichajes.map((f, i) => (
-                  <tr key={f.id} className="transition-colors hover:bg-black/[0.02] animate-fade-in-up" style={{ animationDelay: `${i * 20}ms` }}>
-                    <td className="px-4 py-3 font-medium text-ink whitespace-nowrap">{f.empleadas?.nombre_completo ?? 'Desconocida'}</td>
-                    <td className="px-4 py-3 text-ink">{f.ubicaciones_portales?.nombre ?? 'Edificio'}</td>
-                    <td className="px-4 py-3 text-ink capitalize">{f.tipo}</td>
-                    <td className="px-4 py-3 text-muted whitespace-nowrap">{formatearFechaHora(f.fecha_hora_dispositivo)}</td>
-                    <td className="px-4 py-3 text-danger whitespace-nowrap">{f.distancia_metros ? Math.round(f.distancia_metros) + ' m' : '-'}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+      {cargando && <div className="bg-white border border-black/5 rounded-2xl shadow-sm"><TablaSkeleton /></div>}
+
+      {!cargando && fichajes.length > 0 && (
+        <>
+          <div className="sm:hidden space-y-3">
+            {fichajes.map((f, i) => (
+              <div key={f.id} className="bg-white border border-black/5 rounded-2xl shadow-sm p-4 space-y-1 animate-fade-in-up" style={{ animationDelay: `${i * 20}ms` }}>
+                <p className="font-medium text-ink text-sm flex items-center gap-1.5"><User size={13} /> {f.empleadas?.nombre_completo ?? 'Desconocida'}</p>
+                <p className="text-xs text-muted flex items-center gap-1.5"><Building2 size={12} /> {f.ubicaciones_portales?.nombre ?? 'Edificio'} · <span className="capitalize">{f.tipo}</span></p>
+                <p className="text-xs text-muted flex items-center gap-1.5"><ScanLine size={12} /> {formatearFechaHora(f.fecha_hora_dispositivo)}</p>
+                {f.distancia_metros && (
+                  <p className="text-xs text-danger font-medium flex items-center gap-1.5"><Navigation size={12} /> {Math.round(f.distancia_metros)}m del edificio</p>
+                )}
+              </div>
+            ))}
           </div>
-        )}
-        {!cargando && fichajes.length === 0 && <p className="text-sm text-muted p-5">No hay fichajes fuera de radio en este periodo.</p>}
-      </div>
+
+          <div className="hidden sm:block bg-white border border-black/5 rounded-2xl shadow-sm overflow-hidden">
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b border-black/5 bg-black/[0.02]">
+                    <th className="text-left font-medium text-muted px-4 py-3">Empleada</th>
+                    <th className="text-left font-medium text-muted px-4 py-3">Edificio</th>
+                    <th className="text-left font-medium text-muted px-4 py-3">Tipo</th>
+                    <th className="text-left font-medium text-muted px-4 py-3">Fecha</th>
+                    <th className="text-left font-medium text-muted px-4 py-3">Distancia</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-black/5">
+                  {fichajes.map((f, i) => (
+                    <tr key={f.id} className="transition-colors hover:bg-black/[0.02] animate-fade-in-up" style={{ animationDelay: `${i * 20}ms` }}>
+                      <td className="px-4 py-3 font-medium text-ink whitespace-nowrap">{f.empleadas?.nombre_completo ?? 'Desconocida'}</td>
+                      <td className="px-4 py-3 text-ink">{f.ubicaciones_portales?.nombre ?? 'Edificio'}</td>
+                      <td className="px-4 py-3 text-ink capitalize">{f.tipo}</td>
+                      <td className="px-4 py-3 text-muted whitespace-nowrap">{formatearFechaHora(f.fecha_hora_dispositivo)}</td>
+                      <td className="px-4 py-3 text-danger whitespace-nowrap">{f.distancia_metros ? Math.round(f.distancia_metros) + ' m' : '-'}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </>
+      )}
+
+      {!cargando && fichajes.length === 0 && <p className="text-sm text-muted bg-white border border-black/5 rounded-2xl shadow-sm p-5">No hay fichajes fuera de radio en este periodo.</p>}
     </div>
   )
 }
@@ -259,36 +305,53 @@ function TabJustificantes() {
         </button>
       </div>
 
-      <div className="bg-white border border-black/5 rounded-2xl shadow-sm overflow-hidden">
-        {cargando && <TablaSkeleton />}
-        {!cargando && filtrados.length > 0 && (
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b border-black/5 bg-black/[0.02]">
-                  <th className="text-left font-medium text-muted px-4 py-3">Empleada</th>
-                  <th className="text-left font-medium text-muted px-4 py-3">Tipo</th>
-                  <th className="text-left font-medium text-muted px-4 py-3">Fechas</th>
-                  <th className="text-left font-medium text-muted px-4 py-3">Estado</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-black/5">
-                {filtrados.map((j, i) => (
-                  <tr key={j.id} className="transition-colors hover:bg-black/[0.02] animate-fade-in-up" style={{ animationDelay: `${i * 20}ms` }}>
-                    <td className="px-4 py-3 font-medium text-ink whitespace-nowrap">{j.empleadas?.nombre_completo ?? 'Desconocida'}</td>
-                    <td className="px-4 py-3 text-ink capitalize whitespace-nowrap">{j.tipo.replace('_', ' ')}</td>
-                    <td className="px-4 py-3 text-muted whitespace-nowrap">{j.fecha_inicio} a {j.fecha_fin}</td>
-                    <td className="px-4 py-3">
-                      <span className={`text-xs px-2.5 py-1 rounded-full font-medium ${badgeStyle(j.estado)}`}>{j.estado}</span>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+      {cargando && <div className="bg-white border border-black/5 rounded-2xl shadow-sm"><TablaSkeleton /></div>}
+
+      {!cargando && filtrados.length > 0 && (
+        <>
+          <div className="sm:hidden space-y-3">
+            {filtrados.map((j, i) => (
+              <div key={j.id} className="bg-white border border-black/5 rounded-2xl shadow-sm p-4 space-y-1.5 animate-fade-in-up" style={{ animationDelay: `${i * 20}ms` }}>
+                <div className="flex items-start justify-between gap-2">
+                  <p className="font-medium text-ink text-sm flex items-center gap-1.5"><User size={13} /> {j.empleadas?.nombre_completo ?? 'Desconocida'}</p>
+                  <span className={`text-xs px-2.5 py-1 rounded-full font-medium shrink-0 ${badgeStyle(j.estado)}`}>{j.estado}</span>
+                </div>
+                <p className="text-xs text-muted capitalize">{j.tipo.replace('_', ' ')}</p>
+                <p className="text-xs text-muted flex items-center gap-1.5"><Calendar size={12} /> {j.fecha_inicio} a {j.fecha_fin}</p>
+              </div>
+            ))}
           </div>
-        )}
-        {!cargando && filtrados.length === 0 && <p className="text-sm text-muted p-5">No hay justificantes en este periodo.</p>}
-      </div>
+
+          <div className="hidden sm:block bg-white border border-black/5 rounded-2xl shadow-sm overflow-hidden">
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b border-black/5 bg-black/[0.02]">
+                    <th className="text-left font-medium text-muted px-4 py-3">Empleada</th>
+                    <th className="text-left font-medium text-muted px-4 py-3">Tipo</th>
+                    <th className="text-left font-medium text-muted px-4 py-3">Fechas</th>
+                    <th className="text-left font-medium text-muted px-4 py-3">Estado</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-black/5">
+                  {filtrados.map((j, i) => (
+                    <tr key={j.id} className="transition-colors hover:bg-black/[0.02] animate-fade-in-up" style={{ animationDelay: `${i * 20}ms` }}>
+                      <td className="px-4 py-3 font-medium text-ink whitespace-nowrap">{j.empleadas?.nombre_completo ?? 'Desconocida'}</td>
+                      <td className="px-4 py-3 text-ink capitalize whitespace-nowrap">{j.tipo.replace('_', ' ')}</td>
+                      <td className="px-4 py-3 text-muted whitespace-nowrap">{j.fecha_inicio} a {j.fecha_fin}</td>
+                      <td className="px-4 py-3">
+                        <span className={`text-xs px-2.5 py-1 rounded-full font-medium ${badgeStyle(j.estado)}`}>{j.estado}</span>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </>
+      )}
+
+      {!cargando && filtrados.length === 0 && <p className="text-sm text-muted bg-white border border-black/5 rounded-2xl shadow-sm p-5">No hay justificantes en este periodo.</p>}
     </div>
   )
 }
