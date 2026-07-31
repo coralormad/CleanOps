@@ -6,7 +6,7 @@ import { useAdminJustificantes } from '../../hooks/useAdminJustificantes'
 import { useTurnos } from '../../hooks/useTurnos'
 import { useAuth } from '../../hooks/useAuth'
 import { descargarExcel } from '../../lib/excelExport'
-import { formatearFechaHora } from '../../lib/formato'
+import { formatearFechaHora, formatearHoras } from '../../lib/formato'
 import { Skeleton } from '../../components/Skeleton'
 import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, Tooltip, Legend } from 'recharts'
 
@@ -100,7 +100,7 @@ function TabHoras() {
   const exportar = () => {
     descargarExcel('horas-trabajadas.xlsx', [{
       nombre: 'Horas trabajadas',
-      filas: turnos.map((t) => ({ Empleada: t.empleadaNombre, Edificio: t.ubicacionNombre, Entrada: formatearFechaHora(t.entrada), Salida: formatearFechaHora(t.salida), 'Horas (h)': t.horas ?? '' })),
+      filas: turnos.map((t) => ({ Empleada: t.empleadaNombre, Edificio: t.ubicacionNombre, Entrada: formatearFechaHora(t.entrada), Salida: formatearFechaHora(t.salida), 'Horas (decimal)': t.horas ?? '' })),
     }])
   }
 
@@ -123,8 +123,7 @@ function TabHoras() {
             <BarChart data={datosGrafica} layout="vertical" margin={{ left: 0, right: 24 }}>
               <XAxis type="number" hide />
               <YAxis type="category" dataKey="nombre" width={110} tick={{ fontSize: 12, fill: '#1A2226' }} axisLine={false} tickLine={false} />
-              <Tooltip cursor={{ fill: 'rgba(30,75,95,0.06)' }} contentStyle={{ borderRadius: 12, border: '1px solid rgba(0,0,0,0.08)', fontSize: 13 }} formatter={(value) => (Number(value) || 0).toFixed(2) + ' h'} />
-              <Legend wrapperStyle={{ fontSize: 12 }} />
+                <Tooltip cursor={{ fill: 'rgba(30,75,95,0.06)' }} contentStyle={{ borderRadius: 12, border: '1px solid rgba(0,0,0,0.08)', fontSize: 13 }} formatter={(value) => formatearHoras(Number(value) || 0)} />              <Legend wrapperStyle={{ fontSize: 12 }} />
               <Bar dataKey="asignadas" name="Asignadas" fill="#C9D6DC" radius={[0, 6, 6, 0]} barSize={14} />
               <Bar dataKey="trabajadas" name="Trabajadas" fill="#1E4B5F" radius={[0, 6, 6, 0]} barSize={14} />
             </BarChart>
@@ -142,8 +141,7 @@ function TabHoras() {
                 <p className="font-medium text-ink text-sm flex items-center gap-1.5"><User size={13} /> {t.empleadaNombre}</p>
                 <p className="text-xs text-muted flex items-center gap-1.5"><Building2 size={12} /> {t.ubicacionNombre}</p>
                 <p className="text-xs text-muted flex items-center gap-1.5"><Clock size={12} /> {formatearFechaHora(t.entrada)} - {formatearFechaHora(t.salida)}</p>
-                <p className="text-sm font-medium text-ink pt-1">{t.horas !== null ? t.horas.toFixed(2) + ' h' : 'Sin cerrar'}</p>
-              </div>
+                <p className="text-sm font-medium text-ink pt-1">{t.horas !== null ? formatearHoras(t.horas) : 'Sin cerrar'}</p>              </div>
             ))}
           </div>
 
@@ -166,8 +164,7 @@ function TabHoras() {
                       <td className="px-4 py-3 text-ink">{t.ubicacionNombre}</td>
                       <td className="px-4 py-3 text-muted whitespace-nowrap">{formatearFechaHora(t.entrada)}</td>
                       <td className="px-4 py-3 text-muted whitespace-nowrap">{formatearFechaHora(t.salida)}</td>
-                      <td className="px-4 py-3 text-ink whitespace-nowrap">{t.horas !== null ? t.horas.toFixed(2) + ' h' : '-'}</td>
-                    </tr>
+                    <td className="px-4 py-3 text-ink whitespace-nowrap">{t.horas !== null ? formatearHoras(t.horas) : '-'}</td>                    </tr>
                   ))}
                 </tbody>
               </table>
@@ -191,7 +188,7 @@ function TabAsistencia() {
   const exportar = () => {
     descargarExcel('asistencia-por-edificio.xlsx', [{
       nombre: 'Asistencia por edificio',
-      filas: ordenados.map((t) => ({ Edificio: t.ubicacionNombre, Empleada: t.empleadaNombre, Entrada: formatearFechaHora(t.entrada), Salida: formatearFechaHora(t.salida), 'Horas (h)': t.horas ?? '' })),
+      filas: ordenados.map((t) => ({ Edificio: t.ubicacionNombre, Empleada: t.empleadaNombre, Entrada: formatearFechaHora(t.entrada), Salida: formatearFechaHora(t.salida), 'Horas (decimal)': t.horas ?? '' })),
     }])
   }
 
