@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { useAuth } from '../../hooks/useAuth'
 import { useCheckIn } from '../../hooks/useCheckIn'
 import { QRScanner } from '../../components/QRScanner'
+import { Alert } from '../../components/Alert'
 
 type Tipo = 'entrada' | 'salida'
 
@@ -10,6 +11,7 @@ export function FicharPage() {
   const { registrarFichaje, procesando, pendientes, actualizarContadorPendientes, sincronizarPendientes } = useCheckIn(perfil?.id, perfil?.nombreCompleto)
   const [tipo, setTipo] = useState<Tipo>('entrada')
   const [mensaje, setMensaje] = useState<string | null>(null)
+  const [exito, setExito] = useState(false)
   const [escaneando, setEscaneando] = useState(false)
   const [codigoManual, setCodigoManual] = useState('')
   const [foto, setFoto] = useState<File | null>(null)
@@ -26,6 +28,7 @@ export function FicharPage() {
     setEscaneando(false)
     const resultado = await registrarFichaje(codigo, tipo, foto)
     setMensaje(resultado.mensaje)
+    setExito(resultado.ok)
     setFoto(null)
   }
 
@@ -33,6 +36,7 @@ export function FicharPage() {
     if (!codigoManual.trim()) return
     const resultado = await registrarFichaje(codigoManual.trim(), tipo, foto)
     setMensaje(resultado.mensaje)
+    setExito(resultado.ok)
     setCodigoManual('')
     setFoto(null)
   }
@@ -40,17 +44,17 @@ export function FicharPage() {
   return (
     <div className="max-w-sm mx-auto space-y-4">
       {pendientes > 0 && (
-        <div className="bg-warning-bg text-warning rounded-xl px-4 py-3 space-y-2">
-          <p className="text-xs font-medium">{pendientes} fichaje{pendientes > 1 ? 's' : ''} pendiente{pendientes > 1 ? 's' : ''} de sincronizar</p>
-        </div>
+        <Alert type="warning">
+          {pendientes} fichaje{pendientes > 1 ? 's' : ''} pendiente{pendientes > 1 ? 's' : ''} de sincronizar
+        </Alert>
       )}
 
-      <div className="bg-white rounded-2xl shadow-sm border border-black/5 p-5 space-y-4">
+      <div className="bg-white rounded-2xl shadow-sm border border-black/5 p-5 space-y-4 animate-fade-in-up">
         <div className="flex gap-2">
-          <button onClick={() => setTipo('entrada')} className={`flex-1 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors ${tipo === 'entrada' ? 'bg-primary text-white' : 'bg-black/5 text-ink'}`}>
+          <button onClick={() => { setTipo('entrada'); setMensaje(null) }} className={`flex-1 rounded-lg px-3 py-2.5 text-sm font-medium transition-all ${tipo === 'entrada' ? 'bg-primary text-white' : 'bg-black/5 text-ink hover:bg-black/10'}`}>
             Entrada
           </button>
-          <button onClick={() => setTipo('salida')} className={`flex-1 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors ${tipo === 'salida' ? 'bg-primary text-white' : 'bg-black/5 text-ink'}`}>
+          <button onClick={() => { setTipo('salida'); setMensaje(null) }} className={`flex-1 rounded-lg px-3 py-2.5 text-sm font-medium transition-all ${tipo === 'salida' ? 'bg-primary text-white' : 'bg-black/5 text-ink hover:bg-black/10'}`}>
             Salida
           </button>
         </div>
@@ -61,8 +65,8 @@ export function FicharPage() {
         </div>
 
         {!escaneando && (
-          <button onClick={() => { setMensaje(null); setEscaneando(true) }} disabled={procesando} className="w-full bg-primary hover:bg-primary-dark transition-colors text-white font-medium rounded-lg px-3 py-2.5">
-            Escanear QR para fichar {tipo}
+          <button onClick={() => { setMensaje(null); setEscaneando(true) }} disabled={procesando} className="w-full bg-primary hover:bg-primary-dark transition-all hover:scale-[1.01] text-white font-medium rounded-lg px-3 py-2.5">
+            {procesando ? 'Procesando...' : `Escanear QR para fichar ${tipo}`}
           </button>
         )}
 
@@ -70,13 +74,13 @@ export function FicharPage() {
 
         <div className="pt-3 border-t border-black/5 space-y-2">
           <p className="text-xs text-muted">No funciona la camara? Escribe el codigo:</p>
-          <input type="text" value={codigoManual} onChange={(e) => setCodigoManual(e.target.value)} placeholder="Codigo del edificio" className="w-full border border-black/10 rounded-lg px-3 py-2 text-sm" />
-          <button onClick={handleManual} disabled={procesando} className="w-full bg-black/5 hover:bg-black/10 transition-colors text-ink font-medium rounded-lg px-3 py-2 text-sm">
+          <input type="text" value={codigoManual} onChange={(e) => setCodigoManual(e.target.value)} placeholder="Codigo del edificio" className="w-full border border-black/10 rounded-lg px-3 py-2 text-sm transition-shadow focus:outline-none focus:ring-2 focus:ring-primary/30" />
+          <button onClick={handleManual} disabled={procesando} className="w-full bg-black/5 hover:bg-black/10 transition-all hover:scale-[1.01] text-ink font-medium rounded-lg px-3 py-2 text-sm">
             Fichar {tipo} con codigo manual
           </button>
         </div>
 
-        {mensaje && <p className="text-sm text-ink">{mensaje}</p>}
+        {mensaje && <Alert type={exito ? 'success' : 'error'}>{mensaje}</Alert>}
       </div>
     </div>
   )
