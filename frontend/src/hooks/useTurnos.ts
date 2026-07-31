@@ -66,8 +66,7 @@ export function useTurnos() {
 
     const nombreUbicacion = ubicacion?.nombre ?? 'un edificio'
     const mensajeAviso = 'Nuevo turno asignado: ' + DIAS[datos.diaSemana] + ' ' + datos.horaInicio.slice(0, 5) + '-' + datos.horaFin.slice(0, 5) + ' en ' + nombreUbicacion
-    notificarEmpleada(datos.empleadaId, mensajeAviso)
-
+    notificarEmpleada(datos.empleadaId, mensajeAviso, '/horario')
     await cargar()
     return { ok: true, mensaje: 'Turno creado correctamente' }
   }
@@ -80,8 +79,8 @@ export function useTurnos() {
     if (turno) {
       const nombreUbicacion = turno.ubicaciones_portales?.nombre ?? 'un edificio'
       const mensajeAviso = 'Se ha eliminado tu turno de ' + DIAS[turno.dia_semana] + ' en ' + nombreUbicacion
-      notificarEmpleada(turno.empleada_id, mensajeAviso)
-    }
+    notificarEmpleada(turno.empleada_id, mensajeAviso, '/horario') 
+}
 
     await cargar()
   }

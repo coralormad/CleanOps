@@ -1,5 +1,6 @@
 import { useState } from 'react'
-import { Bell } from 'lucide-react'
+import { Bell, ChevronRight } from 'lucide-react'
+import { useNavigate } from 'react-router-dom'
 import { useNotificaciones } from '../hooks/useNotificaciones'
 import type { Rol } from '../hooks/useAuth'
 
@@ -11,6 +12,15 @@ interface Props {
 export function NotificationBell({ empleadaId, rol }: Props) {
   const { notificaciones, cargando, noLeidas, marcarLeida, marcarTodasLeidas } = useNotificaciones(empleadaId, rol)
   const [abierto, setAbierto] = useState(false)
+  const navigate = useNavigate()
+
+  const alPulsar = (id: string, leida: boolean, enlace: string | null) => {
+    if (!leida) marcarLeida(id)
+    if (enlace) {
+      setAbierto(false)
+      navigate(enlace)
+    }
+  }
 
   return (
     <div className="relative">
@@ -48,13 +58,18 @@ export function NotificationBell({ empleadaId, rol }: Props) {
             {notificaciones.map((n) => (
               <button
                 key={n.id}
-                onClick={() => marcarLeida(n.id)}
+                onClick={() => alPulsar(n.id, n.leida, n.enlace)}
                 className={`w-full text-left px-4 py-3 border-b border-black/5 last:border-0 hover:bg-black/5 transition-colors ${
                   !n.leida ? 'bg-primary/5' : ''
-                }`}
+                } ${n.enlace ? 'cursor-pointer' : 'cursor-default'}`}
               >
-                <p className="text-sm text-ink">{n.mensaje}</p>
-                <p className="text-xs text-muted mt-0.5">{new Date(n.created_at).toLocaleString()}</p>
+                <div className="flex items-start gap-2">
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm text-ink">{n.mensaje}</p>
+                    <p className="text-xs text-muted mt-0.5">{new Date(n.created_at).toLocaleString()}</p>
+                  </div>
+                  {n.enlace && <ChevronRight size={16} className="text-muted shrink-0 mt-0.5" />}
+                </div>
               </button>
             ))}
           </div>

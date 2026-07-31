@@ -1,8 +1,10 @@
 import { useCallback, useEffect, useState } from 'react'
 import { supabase } from '../lib/supabaseClient'
+import { notificarEmpleada } from '../lib/notificaciones'
 
 export interface FichajeConDetalle {
   id: string
+  empleada_id: string
   tipo: 'entrada' | 'salida'
   metodo: string
   fecha_hora_dispositivo: string
@@ -24,7 +26,7 @@ export function useAdminFichajes(revisorId: string | undefined) {
     const { data, error } = await supabase
       .from('fichajes')
       .select(
-        `id, tipo, metodo, fecha_hora_dispositivo, dentro_del_radio, distancia_metros,
+        `id, empleada_id, tipo, metodo, fecha_hora_dispositivo, dentro_del_radio, distancia_metros,
          foto_antes_url, foto_despues_url, estado_revision,
          empleadas!fichajes_empleada_id_fkey ( nombre_completo ),
          ubicaciones_portales ( nombre )`
@@ -48,6 +50,8 @@ export function useAdminFichajes(revisorId: string | undefined) {
 
   const revisar = async (fichajeId: string, nuevoEstado: 'aprobado' | 'rechazado') => {
     if (!revisorId) return
+    const fichaje = fichajes.find((f) => f.id === fichajeId)
+
     await supabase
       .from('fichajes')
       .update({
@@ -56,6 +60,12 @@ export function useAdminFichajes(revisorId: string | undefined) {
         revisado_en: new Date().toISOString(),
       })
       .eq('id', fichajeId)
+
+    if (fichaje) {
+      const nombreUbicacion = fichaje.ubicaciones_portales?.nombre ?? 'un edificio'
+      const mensajeAviso = 'Tu fichaje de ' + fichaje.tipo + ' en ' + nombreUbicacion + ' ha sido ' + nuevoEstado
+      notificarEmpleada(fichaje.empleada_id, mensajeAviso, '/historial')
+    }
 
     await cargar()
   }

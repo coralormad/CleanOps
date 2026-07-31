@@ -44,10 +44,10 @@ export function useAdminJustificantes(revisorId: string | undefined) {
 
     if (justificante) {
       const palabra = nuevoEstado === 'aprobado' ? 'aprobado' : 'rechazado'
-      notificarEmpleada(justificante.empleada_id, 'Tu justificante de ' + justificante.tipo + ' ha sido ' + palabra)
+      notificarEmpleada(justificante.empleada_id, 'Tu justificante de ' + justificante.tipo + ' ha sido ' + palabra, '/justificantes');
     }
 
-    await cargar()
+    await cargar();
   }
 
   return { justificantes, cargando, revisar }
