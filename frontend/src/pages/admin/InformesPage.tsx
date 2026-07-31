@@ -7,6 +7,7 @@ import { useAuth } from '../../hooks/useAuth'
 import { descargarExcel } from '../../lib/excelExport'
 import { formatearFechaHora } from '../../lib/formato'
 import { Skeleton } from '../../components/Skeleton'
+import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, Tooltip, Cell } from 'recharts'
 
 type Tab = 'horas' | 'asistencia' | 'fueraRadio' | 'justificantes'
 
@@ -56,6 +57,12 @@ function TabHoras() {
     totalesPorEmpleada.set(t.empleadaId, actual)
   }
 
+  const datosGrafica = [...totalesPorEmpleada.values()]
+    .map((v) => ({ nombre: v.nombre, horas: Math.round(v.horas * 100) / 100 }))
+    .sort((a, b) => b.horas - a.horas)
+
+  const COLORES = ['#1E4B5F', '#2E6B85', '#4A7C59', '#C9862F', '#6B7680', '#B54A3F']
+
   const exportar = () => {
     descargarExcel('horas-trabajadas.xlsx', [{
       nombre: 'Horas trabajadas',
@@ -74,15 +81,21 @@ function TabHoras() {
 
       <div className="bg-white border border-black/5 rounded-2xl shadow-sm p-4 animate-fade-in-up">
         <h3 className="font-display font-bold text-ink text-sm mb-3">Total de horas por empleada</h3>
-        <div className="space-y-1.5">
-          {[...totalesPorEmpleada.values()].map((v) => (
-            <div key={v.nombre} className="flex justify-between text-sm">
-              <span className="text-ink">{v.nombre}</span>
-              <span className="text-muted font-medium">{v.horas.toFixed(2)} h</span>
-            </div>
-          ))}
-          {totalesPorEmpleada.size === 0 && <p className="text-sm text-muted">Sin datos en este periodo.</p>}
-        </div>
+        {datosGrafica.length === 0 ? (
+          <p className="text-sm text-muted">Sin datos en este periodo.</p>
+        ) : (
+          <ResponsiveContainer width="100%" height={Math.max(datosGrafica.length * 42, 120)}>
+            <BarChart data={datosGrafica} layout="vertical" margin={{ left: 0, right: 24 }}>
+              <XAxis type="number" hide />
+              <YAxis type="category" dataKey="nombre" width={110} tick={{ fontSize: 12, fill: '#1A2226' }} axisLine={false} tickLine={false} />
+            <Tooltip cursor={{ fill: 'rgba(30,75,95,0.06)' }} contentStyle={{ borderRadius: 12, border: '1px solid rgba(0,0,0,0.08)', fontSize: 13 }} formatter={(value) => [(Number(value) || 0).toFixed(2) + ' h', 'Horas']} />              <Bar dataKey="horas" radius={[0, 6, 6, 0]} barSize={22}>
+                {datosGrafica.map((_, i) => (
+                  <Cell key={i} fill={COLORES[i % COLORES.length]} />
+                ))}
+              </Bar>
+            </BarChart>
+          </ResponsiveContainer>
+        )}
       </div>
 
       {cargando && <div className="bg-white border border-black/5 rounded-2xl shadow-sm"><TablaSkeleton /></div>}
